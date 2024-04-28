@@ -1,0 +1,43 @@
+.content {
+  padding-top: 200px;
+  background: #00d6ff4d;
+  height: calc(100vh - 60px);
+  .img-content {
+    padding: 0 30px;
+  }
+  .tips {
+    font-size: 44px;
+    font-weight: 700;
+  }
+  .tips-img {
+    display: inline-block;
+    width: 200px;
+  }
+  .icon {
+    font-size: 38px;
+  }
+  .confirm-btn {
+    width: 220px;
+    height: 80px;
+    font-size: 30px;
+    font-weight: 700;
+    color: #fff;
+    background: #44e015;
+  }
+  .confirm-btn-disabled {
+    width: 220px;
+    height: 80px;
+    font-size: 30px;
+    font-weight: 700;
+  }
+  .confirm-btn:hover {
+    color: #fff !important;
+    border-color: #7ad909 !important;
+    background: #30cb00 !important;
+  }
+  .confirm-btn:active {
+    color: #fff !important;
+    border-color: #7ad909 !important;
+    background: #30cb00 !important;
+  }
+}

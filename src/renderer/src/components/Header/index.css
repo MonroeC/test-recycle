@@ -1,0 +1,21 @@
+.header {
+  height: 60px;
+  background-color: #41a3f0;
+  padding: 0 16px;
+  .title {
+    font-size: 22px;
+    color: #fff;
+    font-weight: 700;
+  }
+  .header-space {
+    text-align: center;
+  }
+
+  .header-space-img {
+    font-size: 24px;
+  }
+
+  .color-gray {
+    color: #efefef;
+  }
+}
