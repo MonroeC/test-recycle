@@ -1,5 +1,4 @@
 const fs = require('fs')
-const path = require('path')
 
 // 获取文件个数的函数
 const getFileCount = (filePath: any) => {

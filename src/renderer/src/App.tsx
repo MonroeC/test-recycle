@@ -1,9 +1,8 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
 import Portal from './components/Protal'
 
 function App(): JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
 
   return (
     <>

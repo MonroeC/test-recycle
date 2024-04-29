@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
 import os from 'os'
+import si from 'systeminformation'
 import icon from '../../resources/icon.png?asset'
 import getFileCount from '../utils/getFileCount'
 
@@ -29,7 +30,7 @@ function createWindow(): void {
   /** 打开开发者工具 */
   mainWindow.webContents.openDevTools()
 
-  fs.watchFile(filePath, (curr, prev) => {
+  fs.watchFile(filePath, () => {
     // 获取文件个数
     const fileCount = getFileCount(filePath)
     // 将文件个数发送给渲染进程
@@ -41,6 +42,12 @@ function createWindow(): void {
     const fileCount = getFileCount(filePath)
     // 将文件个数发送给渲染进程
     mainWindow?.webContents.send('file-count-changed', fileCount)
+
+    // 获取系统信息
+    si.system().then((data) => {
+      console.log('System Information:', data)
+      mainWindow?.webContents.send('system-uuid', data.uuid)
+    })
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -75,7 +82,7 @@ app.whenReady().then(() => {
   ipcMain.on('ping', () => console.log('pong'))
 
   // 监听来自渲染进程的事件
-  ipcMain.on('create-pictures-dir', (event, arg) => {
+  ipcMain.on('create-pictures-dir', (_event, arg) => {
     console.log(arg, 'arg')
     // 在这里可以触发你想要执行的某个操作
   })

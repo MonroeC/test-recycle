@@ -1,7 +1,5 @@
-import React from 'react'
 import { Button, Flex, message } from 'antd'
 import { CloseCircleFilled, CheckCircleFilled } from '@ant-design/icons'
-import fs from 'fs'
 import path from 'path'
 import './index.css'
 

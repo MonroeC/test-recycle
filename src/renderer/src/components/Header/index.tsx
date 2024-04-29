@@ -1,8 +1,6 @@
 import { Flex, Space } from 'antd'
-import React, { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { WifiOutlined, CloudUploadOutlined, ScanOutlined } from '@ant-design/icons'
-import getFileCount from '../../../../utils/getFileCount'
-// import checkNetworkStatus from '../../../utils/checkNetworkStatus';
 import './index.css'
 
 const Header = ({
@@ -14,14 +12,21 @@ const Header = ({
   networkStatus: string
 }) => {
   const [failedCount, setFileCount] = useState(0)
-  window.electron.ipcRenderer.on('file-count-changed', (event, arg) => {
-    console.log(arg, 'arg')
+  const [systemUuid, setSystemUuid] = useState('')
+
+  window.electron.ipcRenderer.on('file-count-changed', (_event, arg) => {
     setFileCount(arg)
   })
+
+  window.electron.ipcRenderer.on('system-uuid', (_event, arg) => {
+    setSystemUuid(arg)
+  })
+
   return (
     <Flex justify="space-between" className="header">
       <Space>
         <div className="title">基石单据回收客户端</div>
+        <div className="uuid">uuid：{systemUuid}</div>
       </Space>
       <Space>
         <div>
