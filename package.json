@@ -25,7 +25,8 @@
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^3.0.0",
     "antd": "^5.16.4",
-    "electron-updater": "^6.1.7"
+    "electron-updater": "^6.1.7",
+    "vite-plugin-commonjs-externals": "^0.1.4"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",

@@ -1,15 +1,14 @@
 "use strict";
 const electron = require("electron");
-const path = require("path");
 const utils = require("@electron-toolkit/utils");
-const fs$1 = require("fs");
 const os = require("os");
+const path = require("path");
 const icon = path.join(__dirname, "../../resources/icon.png");
-const fs = require("fs");
+const fs$1 = require("fs");
 require("path");
 const getFileCount = (filePath2) => {
   try {
-    const files = fs.readdirSync(filePath2);
+    const files = fs$1.readdirSync(filePath2);
     const fileCount = files.length;
     return fileCount;
   } catch (error) {
@@ -17,6 +16,14 @@ const getFileCount = (filePath2) => {
     return 0;
   }
 };
+const { join } = (() => {
+  const mod = require("path");
+  return mod && mod.__esModule ? mod : Object.assign(/* @__PURE__ */ Object.create(null), mod, { default: mod, [Symbol.toStringTag]: "Module" });
+})();
+const { default: fs } = (() => {
+  const mod = require("fs");
+  return mod && mod.__esModule ? mod : Object.assign(/* @__PURE__ */ Object.create(null), mod, { default: mod, [Symbol.toStringTag]: "Module" });
+})();
 const homeDirectory = os.homedir();
 const filePath = `${homeDirectory}/Documents/recyclePictures`;
 function createWindow() {
@@ -27,22 +34,19 @@ function createWindow() {
     autoHideMenuBar: true,
     ...process.platform === "linux" ? { icon } : {},
     webPreferences: {
-      preload: path.join(__dirname, "../preload/index.js"),
+      preload: join(__dirname, "../preload/index.js"),
       sandbox: false
     },
     fullscreen: true
   });
   mainWindow.webContents.openDevTools();
-  fs$1.watchFile(filePath, (curr, prev) => {
-    console.log("File changed:", filePath);
+  fs.watchFile(filePath, (curr, prev) => {
     const fileCount = getFileCount(filePath);
-    console.log(fileCount, "fileCount");
     mainWindow?.webContents.send("file-count-changed", fileCount);
   });
   mainWindow.on("ready-to-show", () => {
     mainWindow.show();
     const fileCount = getFileCount(filePath);
-    console.log(fileCount, "fileCount");
     mainWindow?.webContents.send("file-count-changed", fileCount);
   });
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -52,7 +56,7 @@ function createWindow() {
   if (utils.is.dev && process.env["ELECTRON_RENDERER_URL"]) {
     mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
-    mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
+    mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
 }
 electron.app.whenReady().then(() => {
@@ -61,6 +65,9 @@ electron.app.whenReady().then(() => {
     utils.optimizer.watchWindowShortcuts(window);
   });
   electron.ipcMain.on("ping", () => console.log("pong"));
+  electron.ipcMain.on("create-pictures-dir", (event, arg) => {
+    console.log(arg, "arg");
+  });
   createWindow();
   electron.app.on("activate", function() {
     if (electron.BrowserWindow.getAllWindows().length === 0)

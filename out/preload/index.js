@@ -2,10 +2,10 @@
 const electron = require("electron");
 const preload = require("@electron-toolkit/preload");
 const api = {};
+console.log(preload.electronAPI, "electronAPI");
 if (process.contextIsolated) {
   try {
     electron.contextBridge.exposeInMainWorld("electron", preload.electronAPI);
-    electron.contextBridge.exposeInMainWorld("api", api);
   } catch (error) {
     console.error(error);
   }

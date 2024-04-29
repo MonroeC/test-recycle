@@ -74,6 +74,12 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
+  // 监听来自渲染进程的事件
+  ipcMain.on('create-pictures-dir', (event, arg) => {
+    console.log(arg, 'arg')
+    // 在这里可以触发你想要执行的某个操作
+  })
+
   createWindow()
 
   app.on('activate', function () {
