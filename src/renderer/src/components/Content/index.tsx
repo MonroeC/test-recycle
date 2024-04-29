@@ -15,11 +15,8 @@ const Content = ({
    * 回收单据
    */
   const handleRecycle = (): void => {
-    console.log(path, 121)
-
-    message.success('操作成功')
-
-    window.electron.ipcRenderer.send('create-pictures-dir', '123')
+    console.log(window.electronApi, 'window.electronApi')
+    window.electronApi.createPicturesDir('/111')
   }
 
   return (

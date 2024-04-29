@@ -1,4 +1,4 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
@@ -10,6 +10,9 @@ console.log(electronAPI, 'electronAPI')
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
+    contextBridge.exposeInMainWorld('electronApi', {
+      createPicturesDir: (dir) => ipcRenderer.send('create-pictures-dir', dir)
+    })
   } catch (error) {
     console.error(error)
   }

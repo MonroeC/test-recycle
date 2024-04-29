@@ -45,7 +45,6 @@ function createWindow(): void {
 
     // 获取系统信息
     si.system().then((data) => {
-      console.log('System Information:', data)
       mainWindow?.webContents.send('system-uuid', data.uuid)
     })
   })
@@ -81,9 +80,9 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  // 监听来自渲染进程的事件
+  // 监听来自渲染进程的事件: 单据回收
   ipcMain.on('create-pictures-dir', (_event, arg) => {
-    console.log(arg, 'arg')
+    console.error(arg, 'arg')
     // 在这里可以触发你想要执行的某个操作
   })
 
