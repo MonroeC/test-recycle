@@ -12,21 +12,22 @@ const Header = ({
   networkStatus: string
 }) => {
   const [failedCount, setFileCount] = useState(0)
-  const [systemUuid, setSystemUuid] = useState('')
+  const [systemInfo, setSystemInfo] = useState<Record<string, string>>()
 
   window.electron.ipcRenderer.on('file-count-changed', (_event, arg) => {
     setFileCount(arg)
   })
 
-  window.electron.ipcRenderer.on('system-uuid', (_event, arg) => {
-    setSystemUuid(arg)
+  window.electron.ipcRenderer.on('system-info', (_event, arg) => {
+    setSystemInfo(arg)
   })
 
   return (
     <Flex justify="space-between" className="header">
       <Space>
         <div className="title">基石单据回收客户端</div>
-        <div className="uuid">uuid：{systemUuid}</div>
+        <div className="uuid">uuid：{systemInfo?.uuid}</div>
+        <div className="uuid">serial: {systemInfo?.serial}</div>
       </Space>
       <Space>
         <div>

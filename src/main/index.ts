@@ -10,7 +10,14 @@ import getFileCount from '../utils/getFileCount'
 // 获取用户目录
 const homeDirectory = os.homedir()
 /** 需要监听的文件路径 */
-const filePath = `${homeDirectory}/Documents/recyclePictures` // 文件路径
+const filePath = `${homeDirectory}/recyclePictures` // 文件路径
+
+if (!fs.existsSync(filePath)) {
+  fs.mkdirSync(filePath)
+  console.log('创建文件夹成功')
+} else {
+  console.log('文件夹已存在')
+}
 
 function createWindow(): void {
   // Create the browser window.
@@ -28,7 +35,7 @@ function createWindow(): void {
   })
 
   /** 打开开发者工具 */
-  mainWindow.webContents.openDevTools()
+  // mainWindow.webContents.openDevTools()
 
   fs.watchFile(filePath, () => {
     // 获取文件个数
@@ -45,7 +52,12 @@ function createWindow(): void {
 
     // 获取系统信息
     si.system().then((data) => {
-      mainWindow?.webContents.send('system-uuid', data.uuid)
+      console.log(data, 'system-info')
+      mainWindow?.webContents.send('system-info', data)
+    })
+    si.cpu().then((data) => {
+      console.log(data, 'cpu-info')
+      // mainWindow?.webContents.send('cpu-uuid', data.uuid)
     })
   })
 

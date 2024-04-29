@@ -1,6 +1,5 @@
-import { Button, Flex, message } from 'antd'
+import { Button, Flex } from 'antd'
 import { CloseCircleFilled, CheckCircleFilled } from '@ant-design/icons'
-import path from 'path'
 import './index.css'
 
 const Content = ({
