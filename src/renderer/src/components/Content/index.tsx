@@ -1,23 +1,20 @@
 import { Button, Flex } from 'antd'
 import { CloseCircleFilled, CheckCircleFilled } from '@ant-design/icons'
+import ConfirmRecycle from '../ConfirmReccycle'
 import './index.css'
 
 const Content = ({
-  networkStatus
+  networkStatus,
+  epsonConnect,
+  filePath
 }: {
   /**
    * 当前网络状态
    */
   networkStatus: string
+  epsonConnect: boolean
+  filePath: string
 }) => {
-  /**
-   * 回收单据
-   */
-  const handleRecycle = (): void => {
-    console.log(window.electronApi, 'window.electronApi')
-    window.electronApi.createPicturesDir('/111')
-  }
-
   return (
     <Flex vertical className="content">
       <Flex justify="center" align="center" vertical gap={50}>
@@ -43,14 +40,12 @@ const Content = ({
         </Flex>
         <Flex vertical gap={20} align="center">
           <div className="tips">2、再点击确认回收</div>
-          {networkStatus === 'offline' ? (
+          {networkStatus === 'offline' || !epsonConnect ? (
             <Button className="confirm-btn-disabled" disabled>
               确认回收
             </Button>
           ) : (
-            <Button className="confirm-btn" onClick={handleRecycle} id="recycle-btn">
-              确认回收
-            </Button>
+            <ConfirmRecycle filePath={filePath} />
           )}
         </Flex>
       </Flex>

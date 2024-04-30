@@ -1,26 +1,33 @@
 import { Flex, Space } from 'antd'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { WifiOutlined, CloudUploadOutlined, ScanOutlined } from '@ant-design/icons'
 import './index.css'
 
 const Header = ({
-  networkStatus
+  networkStatus,
+  epsonConnect
 }: {
   /**
    * 当前网络状态
    */
   networkStatus: string
+  /**
+   * 扫描仪链接状态
+   */
+  epsonConnect
 }) => {
   const [failedCount, setFileCount] = useState(0)
   const [systemInfo, setSystemInfo] = useState<Record<string, string>>()
 
-  window.electron.ipcRenderer.on('file-count-changed', (_event, arg) => {
-    setFileCount(arg)
-  })
+  useEffect(() => {
+    window.electron.ipcRenderer.on('file-count-changed', (_event, arg) => {
+      setFileCount(arg)
+    })
 
-  window.electron.ipcRenderer.on('system-info', (_event, arg) => {
-    setSystemInfo(arg)
-  })
+    window.electron.ipcRenderer.on('system-info', (_event, arg) => {
+      setSystemInfo(arg)
+    })
+  }, [])
 
   return (
     <Flex justify="space-between" className="header">
@@ -32,7 +39,12 @@ const Header = ({
       <Space>
         <div>
           <Space size={4} direction="vertical" className="header-space">
-            <ScanOutlined className="header-space-img" />
+            <ScanOutlined
+              className="header-space-img"
+              style={{
+                color: epsonConnect ? '#61f661' : '#d5dbd5'
+              }}
+            />
             <div className="color-white g-fs-12">扫描仪</div>
           </Space>
         </div>

@@ -26,7 +26,11 @@
     "@electron-toolkit/utils": "^3.0.0",
     "antd": "^5.16.4",
     "electron-updater": "^6.1.7",
+    "libusb": "0.0.0-pre",
+    "lowdb": "^7.0.1",
     "systeminformation": "^5.22.7",
+    "twain": "^0.0.6",
+    "usb": "^1.9.2",
     "vite-plugin-commonjs-externals": "^0.1.4"
   },
   "devDependencies": {

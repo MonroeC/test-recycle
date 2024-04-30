@@ -4,20 +4,29 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
 import os from 'os'
 import si from 'systeminformation'
+import { Low } from 'lowdb'
+import { JSONFile } from 'lowdb/node'
 import icon from '../../resources/icon.png?asset'
 import getFileCount from '../utils/getFileCount'
+import usb from 'usb'
 
 // 获取用户目录
 const homeDirectory = os.homedir()
 /** 需要监听的文件路径 */
 const filePath = `${homeDirectory}/recyclePictures` // 文件路径
-
+console.log(filePath, 'filePath')
 if (!fs.existsSync(filePath)) {
   fs.mkdirSync(filePath)
-  console.log('创建文件夹成功')
+  console.log('create dir success')
 } else {
-  console.log('文件夹已存在')
+  console.log('dir already exists')
 }
+// const db = new Low(new JSONFile('file.json'), {})
+// const adapter = new JSONFileSync(`${homeDirectory}/db.json`) // 申明一个适配器
+// const db = new Low(adapter, { pictures: [] })
+// await db.read() //读取文件必须存在，否则content为null无法获取到的文件中的数据
+// const content = null === db.data ? {} : db.data
+// console.log(content, 'content')
 
 function createWindow(): void {
   // Create the browser window.
@@ -35,8 +44,23 @@ function createWindow(): void {
   })
 
   /** 打开开发者工具 */
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
+  /**
+   * 监听usbs设备插拔
+   */
+  usb.on('attach', (device) => {
+    console.log('attcah device', device)
+    mainWindow?.webContents.send('usb-change-device', device)
+  })
 
+  usb.on('detach', (device) => {
+    console.log('detach device', device)
+    mainWindow?.webContents.send('usb-change-device', device)
+  })
+
+  /**
+   * 监听未上传文件个数
+   */
   fs.watchFile(filePath, () => {
     // 获取文件个数
     const fileCount = getFileCount(filePath)
@@ -49,15 +73,16 @@ function createWindow(): void {
     const fileCount = getFileCount(filePath)
     // 将文件个数发送给渲染进程
     mainWindow?.webContents.send('file-count-changed', fileCount)
+    /**
+     * 将文件路径发送给渲染进程
+     */
+    mainWindow?.webContents.send('recycle-pictures-filePath', filePath)
 
-    // 获取系统信息
+    /**
+     * 获取系统信息
+     */
     si.system().then((data) => {
-      console.log(data, 'system-info')
       mainWindow?.webContents.send('system-info', data)
-    })
-    si.cpu().then((data) => {
-      console.log(data, 'cpu-info')
-      // mainWindow?.webContents.send('cpu-uuid', data.uuid)
     })
   })
 
@@ -95,7 +120,11 @@ app.whenReady().then(() => {
   // 监听来自渲染进程的事件: 单据回收
   ipcMain.on('create-pictures-dir', (_event, arg) => {
     console.error(arg, 'arg')
-    // 在这里可以触发你想要执行的某个操作
+    // 创建图片文件夹
+    const dir = `${homeDirectory}/recyclePictures/${arg}`
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir)
+    }
   })
 
   createWindow()

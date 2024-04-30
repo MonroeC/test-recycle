@@ -3,7 +3,10 @@ const electron = require("electron");
 const utils = require("@electron-toolkit/utils");
 const os = require("os");
 const si = require("systeminformation");
+const lowdb = require("lowdb");
+const node = require("lowdb/node");
 const path = require("path");
+const usb = require("usb");
 const icon = path.join(__dirname, "../../resources/icon.png");
 const fs$1 = require("fs");
 const getFileCount = (filePath2) => {
@@ -26,11 +29,12 @@ const { default: fs } = (() => {
 })();
 const homeDirectory = os.homedir();
 const filePath = `${homeDirectory}/recyclePictures`;
+console.log(filePath, "filePath");
 if (!fs.existsSync(filePath)) {
   fs.mkdirSync(filePath);
-  console.log("创建文件夹成功");
+  console.log("create dir success");
 } else {
-  console.log("文件夹已存在");
+  console.log("dir already exists");
 }
 function createWindow() {
   const mainWindow = new electron.BrowserWindow({
@@ -45,6 +49,16 @@ function createWindow() {
     },
     fullscreen: true
   });
+  mainWindow.webContents.openDevTools();
+  new lowdb.Low(new node.JSONFile("file.json"), {});
+  usb.on("attach", (device) => {
+    console.log("attcah device", device);
+    mainWindow?.webContents.send("usb-change-device", device);
+  });
+  usb.on("detach", (device) => {
+    console.log("detach device", device);
+    mainWindow?.webContents.send("usb-change-device", device);
+  });
   fs.watchFile(filePath, () => {
     const fileCount = getFileCount(filePath);
     mainWindow?.webContents.send("file-count-changed", fileCount);
@@ -53,12 +67,9 @@ function createWindow() {
     mainWindow.show();
     const fileCount = getFileCount(filePath);
     mainWindow?.webContents.send("file-count-changed", fileCount);
+    mainWindow?.webContents.send("recycle-pictures-filePath", filePath);
     si.system().then((data) => {
-      console.log(data, "system-info");
       mainWindow?.webContents.send("system-info", data);
-    });
-    si.cpu().then((data) => {
-      console.log(data, "cpu-info");
     });
   });
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -79,6 +90,10 @@ electron.app.whenReady().then(() => {
   electron.ipcMain.on("ping", () => console.log("pong"));
   electron.ipcMain.on("create-pictures-dir", (_event, arg) => {
     console.error(arg, "arg");
+    const dir = `${homeDirectory}/recyclePictures/${arg}`;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
   });
   createWindow();
   electron.app.on("activate", function() {
