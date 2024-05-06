@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Notification } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
@@ -8,7 +8,11 @@ import { Low } from 'lowdb'
 import { JSONFile } from 'lowdb/node'
 import icon from '../../resources/icon.png?asset'
 import getFileCount from '../utils/getFileCount'
+import getFiles from '../utils/getFiles'
+import convertImageToBinary from '../utils/convertImageToBinary'
 import usb from 'usb'
+import axios from 'axios'
+import FormData from 'form-data'
 
 // 获取用户目录
 const homeDirectory = os.homedir()
@@ -34,7 +38,7 @@ function createWindow(): void {
     width: 900,
     height: 670,
     show: false,
-    autoHideMenuBar: true,
+    // autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -49,19 +53,17 @@ function createWindow(): void {
    * 监听usbs设备插拔
    */
   usb.on('attach', (device) => {
-    console.log('attcah device', device)
     mainWindow?.webContents.send('usb-change-device', device)
   })
 
   usb.on('detach', (device) => {
-    console.log('detach device', device)
     mainWindow?.webContents.send('usb-change-device', device)
   })
 
   /**
    * 监听未上传文件个数
    */
-  fs.watchFile(filePath, () => {
+  fs.watch(filePath, () => {
     // 获取文件个数
     const fileCount = getFileCount(filePath)
     // 将文件个数发送给渲染进程
@@ -125,6 +127,35 @@ app.whenReady().then(() => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir)
     }
+  })
+
+  ipcMain.on('picture-save', (event, arg) => {
+    const files = getFiles(arg)
+    const data = new FormData()
+    files?.forEach((one) => {
+      data.append('files', fs.createReadStream(one))
+    })
+    data.append('deviceSn', 'LBCDJSB001')
+    const config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
+      headers: {
+        'content-type': 'multipart/form-data'
+      },
+      data: data
+    }
+
+    axios
+      .request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data))
+        event.reply('picture-save-response', response.data)
+      })
+      .catch((error) => {
+        console.log(error)
+        event.reply('picture-save-response', error?.data)
+      })
   })
 
   createWindow()

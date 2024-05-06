@@ -3,21 +3,44 @@ const electron = require("electron");
 const utils = require("@electron-toolkit/utils");
 const os = require("os");
 const si = require("systeminformation");
-const lowdb = require("lowdb");
-const node = require("lowdb/node");
-const path = require("path");
+const path$2 = require("path");
 const usb = require("usb");
-const icon = path.join(__dirname, "../../resources/icon.png");
-const fs$1 = require("fs");
-const getFileCount = (filePath2) => {
-  try {
-    const files = fs$1.readdirSync(filePath2);
-    const fileCount = files.length;
-    return fileCount;
-  } catch (error) {
-    console.error("Error reading directory:", error);
-    return 0;
+const axios = require("axios");
+const FormData = require("form-data");
+const icon = path$2.join(__dirname, "../../resources/icon.png");
+const fs$2 = require("fs");
+const path$1 = require("path");
+const getFileCount = function(dir) {
+  const res = [];
+  function traverse(dir2) {
+    fs$2.readdirSync(dir2).forEach((file) => {
+      const pathname = path$1.join(dir2, file);
+      if (fs$2.statSync(pathname).isDirectory()) {
+        traverse(pathname);
+      } else {
+        res.push(pathname);
+      }
+    });
   }
+  traverse(dir);
+  return res?.length;
+};
+const fs$1 = require("fs");
+const path = require("path");
+const getFiles = function(dir) {
+  const res = [];
+  function traverse(dir2) {
+    fs$1.readdirSync(dir2).forEach((file) => {
+      const pathname = path.join(dir2, file);
+      if (fs$1.statSync(pathname).isDirectory()) {
+        traverse(pathname);
+      } else {
+        res.push(pathname);
+      }
+    });
+  }
+  traverse(dir);
+  return res;
 };
 const { join } = (() => {
   const mod = require("path");
@@ -41,7 +64,7 @@ function createWindow() {
     width: 900,
     height: 670,
     show: false,
-    autoHideMenuBar: true,
+    // autoHideMenuBar: true,
     ...process.platform === "linux" ? { icon } : {},
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
@@ -50,16 +73,13 @@ function createWindow() {
     fullscreen: true
   });
   mainWindow.webContents.openDevTools();
-  new lowdb.Low(new node.JSONFile("file.json"), {});
   usb.on("attach", (device) => {
-    console.log("attcah device", device);
     mainWindow?.webContents.send("usb-change-device", device);
   });
   usb.on("detach", (device) => {
-    console.log("detach device", device);
     mainWindow?.webContents.send("usb-change-device", device);
   });
-  fs.watchFile(filePath, () => {
+  fs.watch(filePath, () => {
     const fileCount = getFileCount(filePath);
     mainWindow?.webContents.send("file-count-changed", fileCount);
   });
@@ -94,6 +114,29 @@ electron.app.whenReady().then(() => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir);
     }
+  });
+  electron.ipcMain.on("picture-save", (event, arg) => {
+    const files = getFiles(arg);
+    const data = new FormData();
+    files?.forEach((one) => {
+      data.append("files", fs.createReadStream(one));
+    });
+    data.append("deviceSn", "LBCDJSB001");
+    const config = {
+      method: "post",
+      maxBodyLength: Infinity,
+      url: "http://172.16.15.168:8080/api/common/terminalRecycle",
+      headers: {
+        "content-type": "multipart/form-data"
+      },
+      data
+    };
+    axios.request(config).then((response) => {
+      console.log(JSON.stringify(response.data));
+      event.reply("picture-save-response", response.data);
+    }).catch((error) => {
+      console.log(error);
+    });
   });
   createWindow();
   electron.app.on("activate", function() {

@@ -1,5 +1,7 @@
 import { Button, message } from 'antd'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, memo } from 'react'
+import getFiles from '../../../../utils/getFiles'
+import convertImageToBinary from '../../../../utils/convertImageToBinary'
 import './index.css'
 
 const ConfirmRecycle = ({ filePath }) => {
@@ -9,8 +11,6 @@ const ConfirmRecycle = ({ filePath }) => {
     eslObjRef.current = ESLFunctions.ESLCreate()
   }, [ESLFunctions])
 
-  console.log(filePath, 'filePath')
-
   /**
    * 回收单据
    */
@@ -19,6 +19,16 @@ const ConfirmRecycle = ({ filePath }) => {
     window.electronApi.createPicturesDir(`/${time}`)
     ScanAndSaveButtonClick(time)
   }
+
+  useEffect(() => {
+    window.electron.ipcRenderer.on('picture-save-response', (_event, arg) => {
+      if (arg.success) {
+        message.success('单据回收成功')
+      } else {
+        message.error(arg.errMeaasge ?? '单据上传失败')
+      }
+    })
+  }, [])
 
   function ScanAndSaveButtonClick(time) {
     const current_count = 1
@@ -72,7 +82,6 @@ const ConfirmRecycle = ({ filePath }) => {
     saveParam.fileFormat = current_fileFormat
     saveParam.filePath = `${filePath}/${time}`
     saveParam.fileName = current_count
-    console.log(saveParam.filePath, 'scan-filepath')
 
     /** 实例 */
     const eslObj = ESLFunctions.ESLCreate()
@@ -88,7 +97,8 @@ const ConfirmRecycle = ({ filePath }) => {
           console.log(result, '单个保存完成')
         }
         if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
-          message.info('所有保存完成')
+          window.electronApi.pictureSave(saveParam.filePath)
+          console.log(result, '所有保存完成')
         }
       } else {
         message.error('扫描失败' + result.errorCode.toString(16))
@@ -103,4 +113,4 @@ const ConfirmRecycle = ({ filePath }) => {
   )
 }
 
-export default ConfirmRecycle
+export default memo(ConfirmRecycle)

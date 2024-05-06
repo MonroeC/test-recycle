@@ -11,7 +11,8 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('electronApi', {
-      createPicturesDir: (dir) => ipcRenderer.send('create-pictures-dir', dir)
+      createPicturesDir: (dir) => ipcRenderer.send('create-pictures-dir', dir),
+      pictureSave: (dir) => ipcRenderer.send('picture-save', dir)
     })
   } catch (error) {
     console.error(error)
