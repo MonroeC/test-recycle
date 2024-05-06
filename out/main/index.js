@@ -7,6 +7,9 @@ const path$2 = require("path");
 const usb = require("usb");
 const axios = require("axios");
 const FormData = require("form-data");
+const low = require("lowdb");
+const FileSync = require("lowdb/adapters/FileSync");
+const uuid = require("node-uuid");
 const icon = path$2.join(__dirname, "../../resources/icon.png");
 const fs$2 = require("fs");
 const path$1 = require("path");
@@ -59,6 +62,10 @@ if (!fs.existsSync(filePath)) {
 } else {
   console.log("dir already exists");
 }
+const adapter = new FileSync(`${homeDirectory}/db.json`);
+const db = low(adapter);
+db.defaults({ recycleInfos: [] }).write();
+console.log(db.get("recycleInfos").value(), "recycleInfos");
 function createWindow() {
   const mainWindow = new electron.BrowserWindow({
     width: 900,
@@ -118,9 +125,20 @@ electron.app.whenReady().then(() => {
   electron.ipcMain.on("picture-save", (event, arg) => {
     const files = getFiles(arg);
     const data = new FormData();
+    const splits = arg?.split("/");
+    const time = splits?.[splits?.length - 1];
+    const infos = [];
     files?.forEach((one) => {
       data.append("files", fs.createReadStream(one));
+      infos.push({
+        filePath: one,
+        createTime: time,
+        parentPath: arg,
+        isUpload: false,
+        id: uuid.v4()
+      });
     });
+    db.get("recycleInfos").push({ [arg]: infos }).write();
     data.append("deviceSn", "LBCDJSB001");
     const config = {
       method: "post",
@@ -133,9 +151,11 @@ electron.app.whenReady().then(() => {
     };
     axios.request(config).then((response) => {
       console.log(JSON.stringify(response.data));
+      db.get("recycleInfos").find({ parentPath: arg }).assign({ isUpload: true }).write();
       event.reply("picture-save-response", response.data);
     }).catch((error) => {
       console.log(error);
+      event.reply("picture-save-response", error?.data);
     });
   });
   createWindow();

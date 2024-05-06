@@ -4,8 +4,6 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
 import os from 'os'
 import si from 'systeminformation'
-import { Low } from 'lowdb'
-import { JSONFile } from 'lowdb/node'
 import icon from '../../resources/icon.png?asset'
 import getFileCount from '../utils/getFileCount'
 import getFiles from '../utils/getFiles'
@@ -13,6 +11,9 @@ import convertImageToBinary from '../utils/convertImageToBinary'
 import usb from 'usb'
 import axios from 'axios'
 import FormData from 'form-data'
+import low from 'lowdb'
+import FileSync from 'lowdb/adapters/FileSync'
+import uuid from 'node-uuid'
 
 // 获取用户目录
 const homeDirectory = os.homedir()
@@ -25,12 +26,10 @@ if (!fs.existsSync(filePath)) {
 } else {
   console.log('dir already exists')
 }
-// const db = new Low(new JSONFile('file.json'), {})
-// const adapter = new JSONFileSync(`${homeDirectory}/db.json`) // 申明一个适配器
-// const db = new Low(adapter, { pictures: [] })
-// await db.read() //读取文件必须存在，否则content为null无法获取到的文件中的数据
-// const content = null === db.data ? {} : db.data
-// console.log(content, 'content')
+const adapter = new FileSync(`${homeDirectory}/db.json`) // 指定数据文件
+const db = low(adapter)
+db.defaults({ recycleInfos: [] }).write()
+console.log(db.get('recycleInfos').value(), 'recycleInfos')
 
 function createWindow(): void {
   // Create the browser window.
@@ -132,10 +131,24 @@ app.whenReady().then(() => {
   ipcMain.on('picture-save', (event, arg) => {
     const files = getFiles(arg)
     const data = new FormData()
+    const splits = arg?.split('/')
+    const time = splits?.[splits?.length - 1]
+    const infos = []
     files?.forEach((one) => {
       data.append('files', fs.createReadStream(one))
+      infos.push({
+        filePath: one,
+        createTime: time,
+        parentPath: arg,
+        isUpload: false,
+        id: uuid.v4()
+      })
     })
+    db.get('recycleInfos')
+      .push({ [arg]: infos })
+      .write()
     data.append('deviceSn', 'LBCDJSB001')
+
     const config = {
       method: 'post',
       maxBodyLength: Infinity,
@@ -150,6 +163,7 @@ app.whenReady().then(() => {
       .request(config)
       .then((response) => {
         console.log(JSON.stringify(response.data))
+        db.get('recycleInfos').find({ parentPath: arg }).assign({ isUpload: true }).write()
         event.reply('picture-save-response', response.data)
       })
       .catch((error) => {

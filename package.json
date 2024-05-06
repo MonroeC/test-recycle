@@ -29,10 +29,10 @@
     "electron-updater": "^6.1.7",
     "form-data": "^4.0.0",
     "libusb": "0.0.0-pre",
-    "lowdb": "^7.0.1",
+    "lowdb": "^1",
+    "node-uuid": "^1.4.8",
     "systeminformation": "^5.22.7",
-    "twain": "^0.0.6",
-    "usb": "^1.9.2",
+    "usb": "1.8.8",
     "vite-plugin-commonjs-externals": "^0.1.4"
   },
   "devDependencies": {
