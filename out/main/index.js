@@ -10,15 +10,16 @@ const FormData = require("form-data");
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
 const uuid = require("node-uuid");
+const pino = require("pino");
 const icon = path$2.join(__dirname, "../../resources/icon.png");
-const fs$2 = require("fs");
+const fs$3 = require("fs");
 const path$1 = require("path");
 const getFileCount = function(dir) {
   const res = [];
   function traverse(dir2) {
-    fs$2.readdirSync(dir2).forEach((file) => {
+    fs$3.readdirSync(dir2).forEach((file) => {
       const pathname = path$1.join(dir2, file);
-      if (fs$2.statSync(pathname).isDirectory()) {
+      if (fs$3.statSync(pathname).isDirectory()) {
         traverse(pathname);
       } else {
         res.push(pathname);
@@ -28,14 +29,14 @@ const getFileCount = function(dir) {
   traverse(dir);
   return res?.length;
 };
-const fs$1 = require("fs");
+const fs$2 = require("fs");
 const path = require("path");
 const getFiles = function(dir) {
   const res = [];
   function traverse(dir2) {
-    fs$1.readdirSync(dir2).forEach((file) => {
+    fs$2.readdirSync(dir2).forEach((file) => {
       const pathname = path.join(dir2, file);
-      if (fs$1.statSync(pathname).isDirectory()) {
+      if (fs$2.statSync(pathname).isDirectory()) {
         traverse(pathname);
       } else {
         res.push(pathname);
@@ -45,6 +46,19 @@ const getFiles = function(dir) {
   traverse(dir);
   return res;
 };
+const fs$1 = require("fs");
+const removeFileDir = (path2) => {
+  const files = fs$1.readdirSync(path2);
+  for (const item of files) {
+    const stats = fs$1.statSync(`${path2}/${item}`);
+    if (stats.isDirectory()) {
+      removeFileDir(`${path2}/${item}`);
+    } else {
+      fs$1.unlinkSync(`${path2}/${item}`);
+    }
+  }
+  fs$1.rmdirSync(path2);
+};
 const { join } = (() => {
   const mod = require("path");
   return mod && mod.__esModule ? mod : Object.assign(/* @__PURE__ */ Object.create(null), mod, { default: mod, [Symbol.toStringTag]: "Module" });
@@ -53,9 +67,10 @@ const { default: fs } = (() => {
   const mod = require("fs");
   return mod && mod.__esModule ? mod : Object.assign(/* @__PURE__ */ Object.create(null), mod, { default: mod, [Symbol.toStringTag]: "Module" });
 })();
+const logger = pino();
 const homeDirectory = os.homedir();
 const filePath = `${homeDirectory}/recyclePictures`;
-console.log(filePath, "filePath");
+logger.info(filePath, "filePath");
 if (!fs.existsSync(filePath)) {
   fs.mkdirSync(filePath);
   console.log("create dir success");
@@ -65,13 +80,12 @@ if (!fs.existsSync(filePath)) {
 const adapter = new FileSync(`${homeDirectory}/db.json`);
 const db = low(adapter);
 db.defaults({ recycleInfos: [] }).write();
-console.log(db.get("recycleInfos").value(), "recycleInfos");
 function createWindow() {
   const mainWindow = new electron.BrowserWindow({
     width: 900,
     height: 670,
     show: false,
-    // autoHideMenuBar: true,
+    autoHideMenuBar: true,
     ...process.platform === "linux" ? { icon } : {},
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
@@ -114,9 +128,9 @@ electron.app.whenReady().then(() => {
   electron.app.on("browser-window-created", (_, window) => {
     utils.optimizer.watchWindowShortcuts(window);
   });
-  electron.ipcMain.on("ping", () => console.log("pong"));
+  electron.ipcMain.on("ping", () => logger.info("pong"));
   electron.ipcMain.on("create-pictures-dir", (_event, arg) => {
-    console.error(arg, "arg");
+    logger.info(arg, "arg");
     const dir = `${homeDirectory}/recyclePictures/${arg}`;
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir);
@@ -138,23 +152,25 @@ electron.app.whenReady().then(() => {
         id: uuid.v4()
       });
     });
-    db.get("recycleInfos").push({ [arg]: infos }).write();
     data.append("deviceSn", "LBCDJSB001");
+    db.get("recycleInfos").push(...infos).write();
     const config = {
       method: "post",
       maxBodyLength: Infinity,
-      url: "http://172.16.15.168:8080/api/common/terminalRecycle",
+      url: "https://zz-test05.pinming.org/material-client-management/api/common/terminalRecycle",
+      // url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
       headers: {
         "content-type": "multipart/form-data"
       },
       data
     };
     axios.request(config).then((response) => {
-      console.log(JSON.stringify(response.data));
-      db.get("recycleInfos").find({ parentPath: arg }).assign({ isUpload: true }).write();
+      logger.info(JSON.stringify(response.data));
       event.reply("picture-save-response", response.data);
+      db.get("recycleInfos").filter({ parentPath: arg }).each((one) => one.isUpload = true).write();
+      removeFileDir(arg);
     }).catch((error) => {
-      console.log(error);
+      logger.info(error);
       event.reply("picture-save-response", error?.data);
     });
   });

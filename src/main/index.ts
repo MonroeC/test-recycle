@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, Notification } from 'electron'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
@@ -7,19 +7,22 @@ import si from 'systeminformation'
 import icon from '../../resources/icon.png?asset'
 import getFileCount from '../utils/getFileCount'
 import getFiles from '../utils/getFiles'
-import convertImageToBinary from '../utils/convertImageToBinary'
 import usb from 'usb'
 import axios from 'axios'
 import FormData from 'form-data'
 import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import uuid from 'node-uuid'
+import pino from 'pino'
+import removeFileDir from '../utils/removeDir'
+
+const logger = pino()
 
 // 获取用户目录
 const homeDirectory = os.homedir()
 /** 需要监听的文件路径 */
 const filePath = `${homeDirectory}/recyclePictures` // 文件路径
-console.log(filePath, 'filePath')
+logger.info(filePath, 'filePath')
 if (!fs.existsSync(filePath)) {
   fs.mkdirSync(filePath)
   console.log('create dir success')
@@ -29,7 +32,6 @@ if (!fs.existsSync(filePath)) {
 const adapter = new FileSync(`${homeDirectory}/db.json`) // 指定数据文件
 const db = low(adapter)
 db.defaults({ recycleInfos: [] }).write()
-console.log(db.get('recycleInfos').value(), 'recycleInfos')
 
 function createWindow(): void {
   // Create the browser window.
@@ -37,7 +39,7 @@ function createWindow(): void {
     width: 900,
     height: 670,
     show: false,
-    // autoHideMenuBar: true,
+    autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -116,11 +118,11 @@ app.whenReady().then(() => {
   })
 
   // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.on('ping', () => logger.info('pong'))
 
   // 监听来自渲染进程的事件: 单据回收
   ipcMain.on('create-pictures-dir', (_event, arg) => {
-    console.error(arg, 'arg')
+    logger.info(arg, 'arg')
     // 创建图片文件夹
     const dir = `${homeDirectory}/recyclePictures/${arg}`
     if (!fs.existsSync(dir)) {
@@ -133,7 +135,7 @@ app.whenReady().then(() => {
     const data = new FormData()
     const splits = arg?.split('/')
     const time = splits?.[splits?.length - 1]
-    const infos = []
+    const infos: any = []
     files?.forEach((one) => {
       data.append('files', fs.createReadStream(one))
       infos.push({
@@ -144,15 +146,18 @@ app.whenReady().then(() => {
         id: uuid.v4()
       })
     })
-    db.get('recycleInfos')
-      .push({ [arg]: infos })
-      .write()
+
     data.append('deviceSn', 'LBCDJSB001')
+    /** 保存文件成功后将数据写入本地数据库 */
+    db.get('recycleInfos')
+      .push(...infos)
+      .write()
 
     const config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
+      url: 'https://zz-test05.pinming.org/material-client-management/api/common/terminalRecycle',
+      // url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
       headers: {
         'content-type': 'multipart/form-data'
       },
@@ -162,12 +167,19 @@ app.whenReady().then(() => {
     axios
       .request(config)
       .then((response) => {
-        console.log(JSON.stringify(response.data))
-        db.get('recycleInfos').find({ parentPath: arg }).assign({ isUpload: true }).write()
+        logger.info(JSON.stringify(response.data))
+        /** 通知渲染层弹出回收反馈 */
         event.reply('picture-save-response', response.data)
+        /** 更改数据库数据 */
+        db.get('recycleInfos')
+          .filter({ parentPath: arg })
+          .each((one) => (one.isUpload = true))
+          .write()
+        /** 删除文件 */
+        removeFileDir(arg)
       })
       .catch((error) => {
-        console.log(error)
+        logger.info(error)
         event.reply('picture-save-response', error?.data)
       })
   })
