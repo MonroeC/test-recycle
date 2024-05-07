@@ -10,9 +10,10 @@ interface IProps {
   onCancel?: () => void
   onOk?: () => void
   uuid: string
+  checked: boolean
 }
 const SettingModal = (props: IProps) => {
-  const { visible, onOk, onCancel, uuid } = props
+  const { visible, onOk, onCancel, uuid, checked } = props
   const [activeKey, setActiveKey] = useState('sn')
 
   const [targetDate, setTargetDate] = useState<number>()
@@ -29,7 +30,6 @@ const SettingModal = (props: IProps) => {
       setTargetDate(Date.now() + 10000)
     }
   }, [visible])
-  console.log(countdown, 88)
 
   const handleOk = () => {
     onOk && onOk()
@@ -74,7 +74,7 @@ const SettingModal = (props: IProps) => {
           <Tabs items={items} type="card" activeKey={activeKey} onChange={setActiveKey} />
           <div style={{ height: 320 }}>
             {activeKey === 'sn' && <Sn uuid={uuid} />}
-            {activeKey === 'other' && <Other />}
+            {activeKey === 'other' && <Other checked={checked} />}
           </div>
         </div>
         <div className={'tip'}>倒计时{Math.round(countdown / 1000)}s后关闭</div>

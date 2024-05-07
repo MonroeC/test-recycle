@@ -25,9 +25,13 @@ const Portal = () => {
     setUsbChangeCount((old) => old + 1)
   }
 
+  const [isAuto, setIsAuto] = useState(false)
   useEffect(() => {
     window.electron.ipcRenderer.on('usb-change-device', () => {
       refreshUsbChangeCount()
+    })
+    window.electron.ipcRenderer.on('change-auto-response', (event, data) => {
+      setIsAuto(data)
     })
   }, [])
 
@@ -71,8 +75,13 @@ const Portal = () => {
 
   return (
     <>
-      <Header networkStatus={networkStatus} epsonConnect={epsonConnect} />
-      <Content networkStatus={networkStatus} epsonConnect={epsonConnect} filePath={filePath} />
+      <Header networkStatus={networkStatus} epsonConnect={epsonConnect} isAuto={isAuto} />
+      <Content
+        networkStatus={networkStatus}
+        epsonConnect={epsonConnect}
+        filePath={filePath}
+        isAuto={isAuto}
+      />
     </>
   )
 }

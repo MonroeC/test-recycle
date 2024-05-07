@@ -79,7 +79,7 @@ if (!fs.existsSync(filePath)) {
 }
 const adapter = new FileSync(`${homeDirectory}/db.json`);
 const db = low(adapter);
-db.defaults({ recycleInfos: [] }).write();
+db.defaults({ recycleInfos: [], isAuto: false }).write();
 function createWindow() {
   const mainWindow = new electron.BrowserWindow({
     width: 900,
@@ -109,6 +109,8 @@ function createWindow() {
     const fileCount = getFileCount(filePath);
     mainWindow?.webContents.send("file-count-changed", fileCount);
     mainWindow?.webContents.send("recycle-pictures-filePath", filePath);
+    logger.info(db.get("isAuto").value(), 999);
+    mainWindow?.webContents.send("change-auto-response", db.get("isAuto").value());
     si.system().then((data) => {
       mainWindow?.webContents.send("system-info", data);
     });
@@ -135,6 +137,10 @@ electron.app.whenReady().then(() => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir);
     }
+  });
+  electron.ipcMain.on("change-auto", (event, arg) => {
+    db.update("isAuto", () => arg).write();
+    event.reply("change-auto-response", arg);
   });
   electron.ipcMain.on("picture-save", (event, arg) => {
     const files = getFiles(arg);

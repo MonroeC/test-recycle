@@ -31,7 +31,7 @@ if (!fs.existsSync(filePath)) {
 }
 const adapter = new FileSync(`${homeDirectory}/db.json`) // 指定数据文件
 const db = low(adapter)
-db.defaults({ recycleInfos: [] }).write()
+db.defaults({ recycleInfos: [], isAuto: false }).write()
 
 function createWindow(): void {
   // Create the browser window.
@@ -80,6 +80,10 @@ function createWindow(): void {
      * 将文件路径发送给渲染进程
      */
     mainWindow?.webContents.send('recycle-pictures-filePath', filePath)
+    /**
+     * 是否自动回收
+     */
+    mainWindow?.webContents.send('change-auto-response', db.get('isAuto').value())
 
     /**
      * 获取系统信息
@@ -128,6 +132,10 @@ app.whenReady().then(() => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir)
     }
+  })
+  ipcMain.on('change-auto', (event, arg) => {
+    db.update('isAuto', () => arg).write()
+    event.reply('change-auto-response', arg)
   })
 
   ipcMain.on('picture-save', (event, arg) => {

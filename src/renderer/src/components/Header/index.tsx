@@ -6,7 +6,8 @@ import './index.css'
 
 const Header = ({
   networkStatus,
-  epsonConnect
+  epsonConnect,
+  isAuto
 }: {
   /**
    * 当前网络状态
@@ -16,6 +17,10 @@ const Header = ({
    * 扫描仪链接状态
    */
   epsonConnect
+  /**
+   * 自动回收状态
+   */
+  isAuto
 }) => {
   const [failedCount, setFileCount] = useState(0)
   const [systemInfo, setSystemInfo] = useState<Record<string, string>>()
@@ -25,7 +30,6 @@ const Header = ({
     window.electron.ipcRenderer.on('file-count-changed', (_event, arg) => {
       setFileCount(arg)
     })
-
     window.electron.ipcRenderer.on('system-info', (_event, arg) => {
       setSystemInfo(arg)
     })
@@ -46,6 +50,17 @@ const Header = ({
         <div className="uuid">serial: {systemInfo?.serial}</div>
       </Space>
       <Space>
+        <div>
+          <Space size={4} direction="vertical" className="header-space">
+            <ScanOutlined
+              className="header-space-img"
+              style={{
+                color: epsonConnect && isAuto ? '#61f661' : '#d5dbd5'
+              }}
+            />
+            <div className="color-white g-fs-12">自动回收</div>
+          </Space>
+        </div>
         <div>
           <Space size={4} direction="vertical" className="header-space">
             <ScanOutlined
@@ -78,6 +93,7 @@ const Header = ({
       <SettingModal
         visible={visible}
         uuid={systemInfo?.uuid}
+        checked={isAuto}
         onCancel={() => {
           setVisible(false)
         }}

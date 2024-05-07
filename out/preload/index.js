@@ -8,7 +8,8 @@ if (process.contextIsolated) {
     electron.contextBridge.exposeInMainWorld("electron", preload.electronAPI);
     electron.contextBridge.exposeInMainWorld("electronApi", {
       createPicturesDir: (dir) => electron.ipcRenderer.send("create-pictures-dir", dir),
-      pictureSave: (dir) => electron.ipcRenderer.send("picture-save", dir)
+      pictureSave: (dir) => electron.ipcRenderer.send("picture-save", dir),
+      changeAuto: (isAuto) => electron.ipcRenderer.send("change-auto", isAuto)
     });
   } catch (error) {
     console.error(error);

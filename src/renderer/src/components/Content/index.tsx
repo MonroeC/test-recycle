@@ -1,12 +1,16 @@
 import { Button, Flex } from 'antd'
 import { CloseCircleFilled, CheckCircleFilled } from '@ant-design/icons'
 import ConfirmRecycle from '../ConfirmReccycle'
+import scanAndSaveButtonClick from '../../../../utils/scanAndSaveButtonClick'
+
 import './index.css'
+import { useEffect, useRef } from 'react'
 
 const Content = ({
   networkStatus,
   epsonConnect,
-  filePath
+  filePath,
+  isAuto
 }: {
   /**
    * 当前网络状态
@@ -14,7 +18,23 @@ const Content = ({
   networkStatus: string
   epsonConnect: boolean
   filePath: string
+  /**
+   * 自动回收状态
+   */
+  isAuto
 }) => {
+  useEffect(() => {
+    /**
+     * 开启定时任务执行扫描
+     */
+    if (isAuto && ESLFunctions) {
+      const interval = setInterval(() => {
+        console.log('自动扫描')
+        scanAndSaveButtonClick(ESLFunctions, filePath)
+      }, 3000)
+      return () => clearInterval(interval)
+    }
+  }, [isAuto, ESLFunctions])
   return (
     <Flex vertical className="content">
       <Flex justify="center" align="center" vertical gap={50}>
@@ -40,7 +60,7 @@ const Content = ({
         </Flex>
         <Flex vertical gap={20} align="center">
           <div className="tips">2、再点击确认回收</div>
-          {networkStatus === 'offline' || !epsonConnect ? (
+          {networkStatus === 'offline' || !epsonConnect || isAuto ? (
             <Button className="confirm-btn-disabled" disabled>
               确认回收
             </Button>
