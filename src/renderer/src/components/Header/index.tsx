@@ -1,6 +1,7 @@
 import { Flex, Space } from 'antd'
 import { useEffect, useState } from 'react'
 import { WifiOutlined, CloudUploadOutlined, ScanOutlined } from '@ant-design/icons'
+import SettingModal from '../SettingModal'
 import './index.css'
 
 const Header = ({
@@ -18,6 +19,7 @@ const Header = ({
 }) => {
   const [failedCount, setFileCount] = useState(0)
   const [systemInfo, setSystemInfo] = useState<Record<string, string>>()
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
     window.electron.ipcRenderer.on('file-count-changed', (_event, arg) => {
@@ -29,9 +31,16 @@ const Header = ({
     })
   }, [])
 
+  const handleSetting = () => {
+    setVisible(true)
+  }
+
   return (
     <Flex justify="space-between" className="header">
       <Space>
+        <div onClick={handleSetting} className="color-white g-fs-14">
+          icon
+        </div>
         <div className="title">基石单据回收客户端</div>
         <div className="uuid">uuid：{systemInfo?.uuid}</div>
         <div className="uuid">serial: {systemInfo?.serial}</div>
@@ -66,6 +75,13 @@ const Header = ({
           </Space>
         </div>
       </Space>
+      <SettingModal
+        visible={visible}
+        uuid={systemInfo?.uuid}
+        onCancel={() => {
+          setVisible(false)
+        }}
+      />
     </Flex>
   )
 }

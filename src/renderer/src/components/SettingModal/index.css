@@ -1,0 +1,16 @@
+.setting-modal {
+  .tip {
+    text-align: center;
+    color: rgb(230, 5, 5);
+    font-size: 16px;
+  }
+  .tips-img {
+    display: inline-block;
+    width: 200px;
+    height: 160px
+  }
+  .uuid {
+    font-weight: 600;
+    font-size: 18px;
+  }
+}

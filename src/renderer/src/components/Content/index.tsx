@@ -21,19 +21,19 @@ const Content = ({
         <Flex vertical gap={20}>
           <div className="tips">1、1先将单据分为单张、整洁、摆正投入回收口</div>
           <Flex className="img-content" justify="space-between">
-            <Flex vertical gap={12} justify="center" align="center">
+            <Flex vertical gap={12} style={{ width: 304 }} justify="center" align="center">
               <img alt="" className="tips-img" src="https://placehold.co/600x400" />
               <div>单据歪斜、折边、黏连</div>
               <CloseCircleFilled className="icon color-red" />
             </Flex>
-            <Flex vertical gap={12} justify="center" align="center">
+            <Flex vertical gap={12} style={{ width: 304 }} justify="center" align="center">
               <img alt="" className="tips-img" src="https://placehold.co/600x400" />
-              <div>单据歪斜、折边、黏连</div>
+              <div>别针、图钉、露胶等</div>
               <CloseCircleFilled className="icon color-red" />
             </Flex>
-            <Flex vertical gap={12} justify="center" align="center">
+            <Flex vertical gap={12} style={{ width: 304 }} justify="center" align="center">
               <img alt="" className="tips-img" src="https://placehold.co/600x400" />
-              <div>单据歪斜、折边、黏连</div>
+              <div>单据规正，无折边，无黏连、无硬物、黏胶</div>
               <CheckCircleFilled className="icon color-green" />
             </Flex>
           </Flex>
