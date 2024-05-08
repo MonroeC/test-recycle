@@ -109,7 +109,6 @@ function createWindow() {
     const fileCount = getFileCount(filePath);
     mainWindow?.webContents.send("file-count-changed", fileCount);
     mainWindow?.webContents.send("recycle-pictures-filePath", filePath);
-    logger.info(db.get("isAuto").value(), 999);
     mainWindow?.webContents.send("change-auto-response", db.get("isAuto").value());
     si.system().then((data) => {
       mainWindow?.webContents.send("system-info", data);

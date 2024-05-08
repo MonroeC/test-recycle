@@ -27,7 +27,7 @@ const Content = ({
     /**
      * 开启定时任务执行扫描
      */
-    if (isAuto && ESLFunctions) {
+    if (isAuto && ESLFunctions && epsonConnect) {
       const interval = setInterval(() => {
         console.log('自动扫描')
         scanAndSaveButtonClick(ESLFunctions, filePath)
