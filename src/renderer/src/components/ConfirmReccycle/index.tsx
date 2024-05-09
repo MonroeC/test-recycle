@@ -13,16 +13,6 @@ const ConfirmRecycle = ({ filePath }) => {
     scanAndSaveButtonClick(ESLFunctions, filePath)
   }
 
-  useEffect(() => {
-    window.electron.ipcRenderer.on('picture-save-response', (_event, arg) => {
-      if (arg.success) {
-        message.success('单据回收成功')
-      } else {
-        message.error(arg.errMeaasge ?? '单据上传失败')
-      }
-    })
-  }, [])
-
   return (
     <Button className="confirm-btn" onClick={handleRecycle} id="recycle-btn">
       确认回收

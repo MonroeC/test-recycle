@@ -1,7 +1,25 @@
 import { message } from 'antd'
-function scanAndSaveButtonClick(ESLFunctions, filePath) {
+
+const ERR_MAP = {
+  40000020: '卡纸',
+  40000021: '检测到双进给',
+  40008002: '无纸',
+  40008003: 'ADF Conver open ',
+  80000002: '扫描仪启动失败，请刷新重试',
+  80000003: '缺少所需文件',
+  80000005: '内存不足，无法运行',
+  80000006: '没有足够的可用磁盘空间来运行',
+  80000007: '无法写入磁盘',
+  80000008: '无法从磁盘读取',
+  80000009: '指定操作无效',
+  80020001: '不支持指定型号',
+  80020002: '未安装指定型号的扫描仪驱动程序',
+  80020003: '无法打开扫描仪驱动程序',
+  80030001: '扫描操作失败'
+}
+
+function scanAndSaveButtonClick(ESLFunctions, filePath, errcb) {
   const time = new Date().getTime()
-  window.electronApi.createPicturesDir(`/${time}`)
   const current_count = 1
   const current_fileFormat = ESLFunctions?.FF_JPEG
   /**
@@ -56,21 +74,28 @@ function scanAndSaveButtonClick(ESLFunctions, filePath) {
 
   /** 实例 */
   const eslObj = ESLFunctions.ESLCreate()
-  eslObj.ScanAndSave_Simple(connectionParam, scanParams, saveParam, function (isSuccess, result) {
-    if (isSuccess) {
-      // if (result.eventType == ESLFunctions.EVENT_SCANPAGE_COMPLETE) {
-      // }
-      // if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
-      // }
-      // if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
-      // }
-      if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
-        window.electronApi.pictureSave(saveParam.filePath)
+  eslObj.ScanAndSave_Simple(
+    connectionParam,
+    scanParams,
+    saveParam,
+    function (isSuccess, result) {
+      if (isSuccess) {
+        if (result.eventType == ESLFunctions.EVENT_SCANPAGE_COMPLETE) {
+          window.electronApi.createPicturesDir(`/${time}`)
+        }
+        // if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
+        // }
+        // if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
+        // }
+        if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
+          window.electronApi.pictureSave(saveParam.filePath)
+        }
+      } else {
+        message.error('扫描失败' + ERR_MAP[result.errorCode.toString(16)])
       }
-    } else {
-      message.error('扫描失败' + result.errorCode.toString(16))
-    }
-  })
+    },
+    errcb
+  )
 }
 
 export default scanAndSaveButtonClick
