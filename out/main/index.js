@@ -80,8 +80,11 @@ if (!fs.existsSync(filePath)) {
 const adapter = new FileSync(`${homeDirectory}/db.json`);
 const db = low(adapter);
 db.defaults({ recycleInfos: [], isAuto: false }).write();
+const SCANNER_VENDOR_ID = 1208;
+const SCANNER_PRODUCT_ID = 359;
+let mainWindow;
 function createWindow() {
-  const mainWindow = new electron.BrowserWindow({
+  mainWindow = new electron.BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -94,12 +97,6 @@ function createWindow() {
     fullscreen: true
   });
   mainWindow.webContents.openDevTools();
-  usb.on("attach", (device) => {
-    mainWindow?.webContents.send("usb-change-device", device);
-  });
-  usb.on("detach", (device) => {
-    mainWindow?.webContents.send("usb-change-device", device);
-  });
   fs.watch(filePath, () => {
     const fileCount = getFileCount(filePath);
     mainWindow?.webContents.send("file-count-changed", fileCount);
@@ -107,6 +104,7 @@ function createWindow() {
   mainWindow.on("ready-to-show", () => {
     mainWindow.show();
     const fileCount = getFileCount(filePath);
+    checkScannerStatus();
     mainWindow?.webContents.send("file-count-changed", fileCount);
     mainWindow?.webContents.send("recycle-pictures-filePath", filePath);
     mainWindow?.webContents.send("change-auto-response", db.get("isAuto").value());
@@ -124,6 +122,33 @@ function createWindow() {
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
 }
+function checkScannerStatus() {
+  const devices = usb.getDeviceList();
+  console.log(devices, "devices");
+  const scannerConnected = devices.some(
+    (device) => device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID && device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
+  );
+  if (scannerConnected) {
+    console.log("Scanner is connected.");
+    mainWindow?.webContents.send("usb-change-device", true);
+  } else {
+    console.log("Scanner is not connected.");
+    mainWindow?.webContents.send("usb-change-device", false);
+  }
+}
+usb.on("attach", (device) => {
+  console.log("attached:");
+  if (device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID && device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID) {
+    console.log("Scanner attached:");
+    mainWindow?.webContents.send("usb-change-device", true);
+  }
+});
+usb.on("detach", (device) => {
+  console.log("detach:");
+  if (device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID && device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID) {
+    mainWindow?.webContents.send("usb-change-device", false);
+  }
+});
 electron.app.whenReady().then(() => {
   utils.electronApp.setAppUserModelId("com.electron");
   electron.app.on("browser-window-created", (_, window) => {

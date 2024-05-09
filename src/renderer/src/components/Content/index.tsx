@@ -1,4 +1,4 @@
-import { Button, Flex } from 'antd'
+import { Button, Flex, message } from 'antd'
 import { CloseCircleFilled, CheckCircleFilled } from '@ant-design/icons'
 import ConfirmRecycle from '../ConfirmReccycle'
 import scanAndSaveButtonClick from '../../../../utils/scanAndSaveButtonClick'
@@ -28,18 +28,33 @@ const Content = ({
      * 开启定时任务执行扫描
      */
     if (isAuto && ESLFunctions && epsonConnect) {
-      const interval = setInterval(() => {
-        console.log('自动扫描')
-        scanAndSaveButtonClick(ESLFunctions, filePath)
-      }, 3000)
-      return () => clearInterval(interval)
+      console.log('自动扫描')
+      // autoFun(isAuto)
     }
-  }, [isAuto, ESLFunctions])
+  }, [isAuto, ESLFunctions, epsonConnect])
+
+  const autoFun = (isAuto) => {
+    scanAndSaveButtonClick(ESLFunctions, filePath, () => {
+      autoFun(isAuto)
+    })
+  }
+
+  useEffect(() => {
+    window.electron.ipcRenderer.on('picture-save-response', (_event, arg) => {
+      if (arg.success) {
+        message.success('单据回收成功')
+        autoFun(isAuto)
+      } else {
+        message.error(arg.errMeaasge ?? '单据上传失败')
+      }
+    })
+  }, [])
+
   return (
     <Flex vertical className="content">
       <Flex justify="center" align="center" vertical gap={50}>
         <Flex vertical gap={20}>
-          <div className="tips">1、1先将单据分为单张、整洁、摆正投入回收口</div>
+          <div className="tips">1、将单据分为单张、整洁、摆正投入回收口</div>
           <Flex className="img-content" justify="space-between">
             <Flex vertical gap={12} style={{ width: 304 }} justify="center" align="center">
               <img alt="" className="tips-img" src="https://placehold.co/600x400" />
