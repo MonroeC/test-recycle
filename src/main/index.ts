@@ -32,10 +32,13 @@ if (!fs.existsSync(filePath)) {
 const adapter = new FileSync(`${homeDirectory}/db.json`) // 指定数据文件
 const db = low(adapter)
 db.defaults({ recycleInfos: [], isAuto: false }).write()
+const SCANNER_VENDOR_ID = 1208
+const SCANNER_PRODUCT_ID = 359
+let mainWindow
 
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -47,19 +50,8 @@ function createWindow(): void {
     },
     fullscreen: true
   })
-
   /** 打开开发者工具 */
   mainWindow.webContents.openDevTools()
-  /**
-   * 监听usbs设备插拔
-   */
-  usb.on('attach', (device) => {
-    mainWindow?.webContents.send('usb-change-device', device)
-  })
-
-  usb.on('detach', (device) => {
-    mainWindow?.webContents.send('usb-change-device', device)
-  })
 
   /**
    * 监听未上传文件个数
@@ -74,6 +66,7 @@ function createWindow(): void {
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
     const fileCount = getFileCount(filePath)
+    checkScannerStatus(mainWindow)
     // 将文件个数发送给渲染进程
     mainWindow?.webContents.send('file-count-changed', fileCount)
     /**
@@ -106,6 +99,50 @@ function createWindow(): void {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
+
+function checkScannerStatus() {
+  const devices = usb.getDeviceList()
+  console.log(devices, 'devices')
+  const scannerConnected = devices.some(
+    (device) =>
+      device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
+      device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
+  )
+
+  if (scannerConnected) {
+    console.log('Scanner is connected.')
+    // 可以进一步将状态发送到渲染器
+    mainWindow?.webContents.send('usb-change-device', true)
+  } else {
+    console.log('Scanner is not connected.')
+    mainWindow?.webContents.send('usb-change-device', false)
+  }
+}
+
+/**
+ * 监听usbs设备插拔
+ */
+usb.on('attach', (device) => {
+  console.log('attached:')
+
+  if (
+    device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
+    device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
+  ) {
+    console.log('Scanner attached:')
+    mainWindow?.webContents.send('usb-change-device', true)
+  }
+})
+
+usb.on('detach', (device) => {
+  console.log('detach:')
+  if (
+    device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
+    device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
+  ) {
+    mainWindow?.webContents.send('usb-change-device', false)
+  }
+})
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
