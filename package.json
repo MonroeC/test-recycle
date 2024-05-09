@@ -31,6 +31,7 @@
     "form-data": "^4.0.0",
     "libusb": "0.0.0-pre",
     "lowdb": "^1",
+    "moment": "^2.30.1",
     "node-uuid": "^1.4.8",
     "pino": "^9.0.0",
     "systeminformation": "^5.22.7",

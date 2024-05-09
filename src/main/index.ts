@@ -5,16 +5,12 @@ import fs from 'fs'
 import os from 'os'
 import si from 'systeminformation'
 import icon from '../../resources/icon.png?asset'
-import getFileCount from '../utils/getFileCount'
-import getFiles from '../utils/getFiles'
 import usb from 'usb'
-import axios from 'axios'
-import FormData from 'form-data'
 import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
-import uuid from 'node-uuid'
 import pino from 'pino'
-import removeFileDir from '../utils/removeDir'
+import { createDir, savePicture, checkScannerStatus, checkRestFiles } from '../utils/common'
+import getFileCount from '../utils/getFileCount'
 
 const logger = pino()
 
@@ -22,18 +18,17 @@ const logger = pino()
 const homeDirectory = os.homedir()
 /** 需要监听的文件路径 */
 const filePath = `${homeDirectory}/recyclePictures` // 文件路径
-logger.info(filePath, 'filePath')
-if (!fs.existsSync(filePath)) {
-  fs.mkdirSync(filePath)
-  console.log('create dir success')
-} else {
-  console.log('dir already exists')
-}
+/** 创建照片存储文件夹： 根目录下的recyclePictures */
+createDir(filePath)
+/** 初始化数据库 */
 const adapter = new FileSync(`${homeDirectory}/db.json`) // 指定数据文件
 const db = low(adapter)
 db.defaults({ recycleInfos: [], isAuto: false }).write()
+
 const SCANNER_VENDOR_ID = 1208
 const SCANNER_PRODUCT_ID = 359
+const INTERVAL_TIME = 60000
+
 let mainWindow
 
 function createWindow(): void {
@@ -53,21 +48,14 @@ function createWindow(): void {
   /** 打开开发者工具 */
   mainWindow.webContents.openDevTools()
 
-  /**
-   * 监听未上传文件个数
-   */
-  fs.watch(filePath, () => {
-    // 获取文件个数
-    const fileCount = getFileCount(filePath)
-    // 将文件个数发送给渲染进程
-    mainWindow?.webContents.send('file-count-changed', fileCount)
-  })
-
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
-    const fileCount = getFileCount(filePath)
-    checkScannerStatus(mainWindow)
+    checkScannerStatus((value) => {
+      mainWindow?.webContents.send('usb-change-device', value)
+    })
+    checkInterval()
     // 将文件个数发送给渲染进程
+    const fileCount = getFileCount(filePath)
     mainWindow?.webContents.send('file-count-changed', fileCount)
     /**
      * 将文件路径发送给渲染进程
@@ -100,31 +88,27 @@ function createWindow(): void {
   }
 }
 
-function checkScannerStatus() {
-  const devices = usb.getDeviceList()
-  console.log(devices, 'devices')
-  const scannerConnected = devices.some(
-    (device) =>
-      device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
-      device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
-  )
-
-  if (scannerConnected) {
-    console.log('Scanner is connected.')
-    // 可以进一步将状态发送到渲染器
-    mainWindow?.webContents.send('usb-change-device', true)
-  } else {
-    console.log('Scanner is not connected.')
-    mainWindow?.webContents.send('usb-change-device', false)
-  }
+const checkInterval = () => {
+  setInterval(() => {
+    checkRestFiles((value) => savePicture(value, db, null))
+  }, INTERVAL_TIME)
 }
+
+/**
+ * 监听未上传文件个数
+ */
+fs.watch(filePath, () => {
+  // 获取文件个数
+  const fileCount = getFileCount(filePath)
+  // 将文件个数发送给渲染进程
+  mainWindow?.webContents.send('file-count-changed', fileCount)
+})
 
 /**
  * 监听usbs设备插拔
  */
 usb.on('attach', (device) => {
   console.log('attached:')
-
   if (
     device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
     device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
@@ -161,7 +145,9 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => logger.info('pong'))
 
-  // 监听来自渲染进程的事件: 单据回收
+  /**
+   * 监听来自渲染进程的事件: 单据回收
+   */
   ipcMain.on('create-pictures-dir', (_event, arg) => {
     logger.info(arg, 'arg')
     // 创建图片文件夹
@@ -170,63 +156,16 @@ app.whenReady().then(() => {
       fs.mkdirSync(dir)
     }
   })
+  /**
+   * 监听自动扫描开关配置
+   */
   ipcMain.on('change-auto', (event, arg) => {
     db.update('isAuto', () => arg).write()
     event.reply('change-auto-response', arg)
   })
 
   ipcMain.on('picture-save', (event, arg) => {
-    const files = getFiles(arg)
-    const data = new FormData()
-    const splits = arg?.split('/')
-    const time = splits?.[splits?.length - 1]
-    const infos: any = []
-    files?.forEach((one) => {
-      data.append('files', fs.createReadStream(one))
-      infos.push({
-        filePath: one,
-        createTime: time,
-        parentPath: arg,
-        isUpload: false,
-        id: uuid.v4()
-      })
-    })
-
-    data.append('deviceSn', 'LBCDJSB001')
-    /** 保存文件成功后将数据写入本地数据库 */
-    db.get('recycleInfos')
-      .push(...infos)
-      .write()
-
-    const config = {
-      method: 'post',
-      maxBodyLength: Infinity,
-      url: 'https://zz-test05.pinming.org/material-client-management/api/common/terminalRecycle',
-      // url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
-      headers: {
-        'content-type': 'multipart/form-data'
-      },
-      data: data
-    }
-
-    axios
-      .request(config)
-      .then((response) => {
-        logger.info(JSON.stringify(response.data))
-        /** 通知渲染层弹出回收反馈 */
-        event.reply('picture-save-response', response.data)
-        /** 更改数据库数据 */
-        db.get('recycleInfos')
-          .filter({ parentPath: arg })
-          .each((one) => (one.isUpload = true))
-          .write()
-        /** 删除文件 */
-        removeFileDir(arg)
-      })
-      .catch((error) => {
-        logger.info(error)
-        event.reply('picture-save-response', error?.data)
-      })
+    savePicture(arg, db, event)
   })
 
   createWindow()
@@ -242,6 +181,8 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
+  // @ts-ignore
+  clearInterval(checkInterval)
   if (process.platform !== 'darwin') {
     app.quit()
   }

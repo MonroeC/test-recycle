@@ -12,7 +12,7 @@ const Other = (props: Record<string, boolean>) => {
   }, [props.checked])
 
   useEffect(() => {
-    window.electron.ipcRenderer.on('change-auto-response', (event, data) => {
+    window.electron.ipcRenderer.on('change-auto-response', (_event, data) => {
       setChecked(data)
     })
   }, [])

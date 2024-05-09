@@ -46,8 +46,8 @@ const Header = ({
           icon
         </div>
         <div className="title">基石单据回收客户端</div>
-        <div className="uuid">uuid：{systemInfo?.uuid}</div>
-        <div className="uuid">serial: {systemInfo?.serial}</div>
+        {/* <div className="uuid">uuid：{systemInfo?.uuid}</div>
+        <div className="uuid">serial: {systemInfo?.serial}</div> */}
       </Space>
       <Space>
         <div>
@@ -66,7 +66,7 @@ const Header = ({
             <ScanOutlined
               className="header-space-img"
               style={{
-                color: epsonConnect ? '#61f661' : '#d5dbd5'
+                color: epsonConnect ? '#61f661' : 'red'
               }}
             />
             <div className="color-white g-fs-12">扫描仪</div>
@@ -83,7 +83,7 @@ const Header = ({
             <WifiOutlined
               className="header-space-img"
               style={{
-                color: networkStatus === 'online' ? '#61f661' : '#d5dbd5'
+                color: networkStatus === 'online' ? '#61f661' : 'red'
               }}
             />
             <div className="color-white g-fs-12">网络</div>

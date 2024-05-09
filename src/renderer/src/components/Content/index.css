@@ -1,5 +1,5 @@
 .content {
-  padding-top: 200px;
+  padding-top: calc(50vh - 295px);
   background: #00d6ff4d;
   height: calc(100vh - 60px);
   .img-content {
@@ -8,6 +8,7 @@
   .tips {
     font-size: 44px;
     font-weight: 700;
+    text-align: center;
   }
   .tips-img {
     display: inline-block;

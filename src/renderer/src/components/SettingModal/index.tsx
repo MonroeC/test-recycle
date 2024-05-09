@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Flex, Modal, Tabs } from 'antd'
 import { useCountDown } from 'ahooks'
 import Sn from './Sn'
@@ -9,8 +9,8 @@ interface IProps {
   visible: boolean
   onCancel?: () => void
   onOk?: () => void
-  uuid: string
   checked: boolean
+  [key: string]: any
 }
 const SettingModal = (props: IProps) => {
   const { visible, onOk, onCancel, uuid, checked } = props
@@ -21,13 +21,15 @@ const SettingModal = (props: IProps) => {
   const [countdown] = useCountDown({
     targetDate,
     onEnd: () => {
-      // onCancel && onCancel()
+      onCancel && onCancel()
     }
   })
 
   useEffect(() => {
     if (visible) {
       setTargetDate(Date.now() + 10000)
+    } else {
+      setActiveKey('sn')
     }
   }, [visible])
 

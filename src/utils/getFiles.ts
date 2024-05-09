@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const getFiles = function (dir) {
-  const res = []
+  const res: any = []
   function traverse(dir) {
     fs.readdirSync(dir).forEach((file) => {
       const pathname = path.join(dir, file)
