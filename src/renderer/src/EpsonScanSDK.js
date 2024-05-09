@@ -352,13 +352,7 @@ ESLClass.prototype.Save = function (params, callback) {
   requestXML.send(json)
 }
 
-ESLClass.prototype.ScanAndSave_Simple = function (
-  connectionParam,
-  scanParam,
-  saveParam,
-  callBack,
-  closeCb
-) {
+ESLClass.prototype.ScanAndSave_Simple = function (connectionParam, scanParam, saveParam, callBack) {
   var eslObj = ESLFunctions.ESLCreate()
   eslObj.Open(connectionParam, function (isSuccess, result) {
     if (isSuccess == true) {
@@ -394,11 +388,7 @@ ESLClass.prototype.ScanAndSave_Simple = function (
           }
         } else {
           callBack(false, result)
-          eslObj.Close(function (isSuccess, result) {
-            if (closeCb) {
-              closeCb(isSuccess, result)
-            }
-          })
+          eslObj.Close(function (isSuccess, result) {})
         }
       })
     } else {

@@ -33,17 +33,10 @@ const Content = ({
     }
   }, [isAuto, ESLFunctions, epsonConnect])
 
-  const autoFun = (isAuto) => {
-    scanAndSaveButtonClick(ESLFunctions, filePath, () => {
-      autoFun(isAuto)
-    })
-  }
-
   useEffect(() => {
     window.electron.ipcRenderer.on('picture-save-response', (_event, arg) => {
       if (arg.success) {
         message.success('单据回收成功')
-        autoFun(isAuto)
       } else {
         message.error(arg.errMeaasge ?? '单据上传失败')
       }
