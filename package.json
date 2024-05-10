@@ -1,9 +1,9 @@
 {
   "name": "jishi-recycle",
   "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "description": "品茗基石单据回收系统",
   "main": "./out/main/index.js",
-  "author": "example.com",
+  "author": "pinming",
   "homepage": "https://electron-vite.org",
   "scripts": {
     "format": "prettier --write .",

@@ -9,7 +9,7 @@ interface IProps {
   [key: string]: any
 }
 const ResultModal = (props: IProps) => {
-  const { visible, onOk, onCancel, status } = props
+  const { visible, onOk, onCancel, status, subTitle } = props
   const [targetDate, setTargetDate] = useState<number>()
 
   useEffect(() => {
@@ -43,6 +43,10 @@ const ResultModal = (props: IProps) => {
     error: {
       title: '回收失败',
       subTitle: '请联系项目人员检查设备是否异常？或扫描仪是否卡纸或污损？'
+    },
+    scanError: {
+      title: '扫描失败',
+      subTitle: subTitle
     }
   }
 
@@ -55,9 +59,6 @@ const ResultModal = (props: IProps) => {
       width={520}
       footer={null}
       centered
-      styles={{
-        body: {}
-      }}
     >
       {status === 'loading' ? (
         <div
@@ -71,7 +72,7 @@ const ResultModal = (props: IProps) => {
         </div>
       ) : (
         <Result
-          status={status}
+          status={status === 'scanError' ? 'error' : status}
           title={TEXT_MAP[status]?.title}
           subTitle={TEXT_MAP[status]?.subTitle}
         />

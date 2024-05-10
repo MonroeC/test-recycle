@@ -1,9 +1,7 @@
-import { message } from 'antd'
-
 const ERR_MAP = {
-  40000020: '卡纸',
+  40000020: '扫描单据卡纸，请检查',
   40000021: '检测到双进给',
-  40008002: '无纸',
+  40008002: '无扫描单据，请检查',
   40008003: 'ADF Conver open ',
   80000002: '扫描仪启动失败，请刷新重试',
   80000003: '缺少所需文件',
@@ -18,7 +16,7 @@ const ERR_MAP = {
   80030001: '扫描操作失败'
 }
 
-function scanAndSaveButtonClick(ESLFunctions, filePath) {
+function scanAndSaveButtonClick(ESLFunctions, filePath, errcb) {
   const time = new Date().getTime()
   const current_count = 1
   const current_fileFormat = ESLFunctions?.FF_JPEG
@@ -60,6 +58,8 @@ function scanAndSaveButtonClick(ESLFunctions, filePath) {
   scanParams.optDoubleFeedDetect = ESLFunctions.DFD_NONE
   /** 空白页跳过  BPS_NONE 不跳过*/
   scanParams.optBlankPageSkip = ESLFunctions.BPS_NONE
+  /** 自动送纸：AFM_ON  AFM_NONE */
+  // scanParams.autoFeedingMode = ESLFunctions.AFM_ON
   /** 偏斜矫正 SC_EDGE 通过边缘矫正 */
   scanParams.skewCorrect = ESLFunctions.SC_EDGE
 
@@ -77,17 +77,19 @@ function scanAndSaveButtonClick(ESLFunctions, filePath) {
   eslObj.ScanAndSave_Simple(connectionParam, scanParams, saveParam, function (isSuccess, result) {
     if (isSuccess) {
       if (result.eventType == ESLFunctions.EVENT_SCANPAGE_COMPLETE) {
+        console.log('扫描仪一页')
         window.electronApi.createPicturesDir(`/${time}`)
       }
-      // if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
-      // }
-      // if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
-      // }
+      if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
+      }
+      if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
+      }
       if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
         window.electronApi.pictureSave(saveParam.filePath)
       }
     } else {
-      message.error('扫描失败' + ERR_MAP[result.errorCode.toString(16)])
+      // message.error('扫描失败' + ERR_MAP[result.errorCode.toString(16)])
+      errcb && errcb(ERR_MAP[result.errorCode.toString(16)])
     }
   })
 }
