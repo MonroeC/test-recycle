@@ -231,7 +231,7 @@
         requestXML.send(json)
       }
 
-      ESLClass.prototype.Close = function (callback) {
+      ESLClass.prototype.Close = function (callback, serverURL) {
         var requestXML = new XMLHttpRequest()
         requestXML.onreadystatechange = function () {
           if (requestXML.readyState === 4) {
@@ -243,7 +243,7 @@
           }
         }
 
-        requestXML.open('POST', this.serverURL + '/Close', true)
+        requestXML.open('POST', (serverURL ?? this.serverURL) + '/Close', true)
         requestXML.setRequestHeader('Content-Type', 'text/plain')
         requestXML.send()
       }
@@ -371,50 +371,69 @@
         connectionParam,
         scanParam,
         saveParam,
-        callBack
+        callBack,
+        closeCallBack
       ) {
         var eslObj = ESLFunctions.ESLCreate()
-        eslObj.Open(connectionParam, function (isSuccess, result) {
-          if (isSuccess == true) {
-            eslObj.Scan(scanParam, function (isSuccess, result) {
-              if (isSuccess) {
-                if (result.eventType == ESLFunctions.EVENT_SCANPAGE_COMPLETE) {
-                  callBack(true, result)
-                }
+        try {
+          eslObj.Open(connectionParam, function (isSuccess, result) {
+            if (isSuccess == true) {
+              eslObj.Scan(scanParam, function (isSuccess, result) {
+                if (isSuccess) {
+                  if (result.eventType == ESLFunctions.EVENT_SCANPAGE_COMPLETE) {
+                    callBack(true, result)
+                  }
 
-                if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
-                  callBack(true, result)
+                  if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
+                    callBack(true, result)
 
-                  eslObj.Save(saveParam, function (isSuccess, result) {
-                    if (isSuccess == true) {
-                      if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
-                        callBack(true, result)
-                      }
-                      if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
-                        var saveResult = result
+                    eslObj.Save(saveParam, function (isSuccess, result) {
+                      if (isSuccess == true) {
+                        if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
+                          callBack(true, result)
+                        }
+                        if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
+                          var saveResult = result
+                          eslObj.Close(function (isSuccess, result) {
+                            if (isSuccess == true) {
+                              callBack(true, saveResult)
+                              closeCallBack()
+                            } else {
+                              callBack(false, result)
+                            }
+                          })
+                        }
+                      } else {
+                        callBack(false, result)
                         eslObj.Close(function (isSuccess, result) {
-                          if (isSuccess == true) {
-                            callBack(true, saveResult)
-                          } else {
-                            callBack(false, result)
+                          if (isSuccess) {
+                            closeCallBack()
                           }
                         })
                       }
-                    } else {
-                      callBack(false, result)
-                      eslObj.Close(function (isSuccess, result) {})
+                    })
+                  }
+                } else {
+                  callBack(false, result)
+                  eslObj.Close(function (isSuccess, result) {
+                    if (isSuccess == true) {
+                      closeCallBack()
                     }
                   })
                 }
-              } else {
-                callBack(false, result)
-                eslObj.Close(function (isSuccess, result) {})
-              }
-            })
-          } else {
-            callBack(false, result)
-          }
-        })
+              })
+            } else {
+              console.log(result, 88)
+              callBack(false, result)
+            }
+          })
+        } catch (error) {
+          eslObj.Close(function (isSuccess, result) {
+            if (isSuccess == true) {
+              closeCallBack()
+            }
+          })
+        }
       }
     </script>
     <script type="module" src="/src/main.tsx"></script>

@@ -11671,7 +11671,7 @@ const db = low(adapter);
 db.defaults({ recycleInfos: [], isAuto: false }).write();
 const SCANNER_VENDOR_ID = 1208;
 const SCANNER_PRODUCT_ID = 359;
-const INTERVAL_TIME = 6e4;
+const INTERVAL_TIME = 2e4;
 let mainWindow;
 function createWindow() {
   mainWindow = new electron.BrowserWindow({

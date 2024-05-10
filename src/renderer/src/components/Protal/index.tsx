@@ -35,6 +35,14 @@ const Portal = () => {
   window.addEventListener('online', alertOnlineStatus)
   window.addEventListener('offline', alertOnlineStatus)
 
+  useEffect(() => {
+    return () => {
+      // 卸 载的时候关闭扫描进程
+      const eslObj = ESLFunctions.ESLCreate()
+      eslObj.Close(() => {}, 'http://localhost:51000')
+    }
+  }, [])
+
   return (
     <>
       <Header networkStatus={networkStatus} epsonConnect={epsonConnect} isAuto={isAuto} />

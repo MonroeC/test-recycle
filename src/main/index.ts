@@ -27,7 +27,7 @@ db.defaults({ recycleInfos: [], isAuto: false }).write()
 
 const SCANNER_VENDOR_ID = 1208
 const SCANNER_PRODUCT_ID = 359
-const INTERVAL_TIME = 60000
+const INTERVAL_TIME = 20000
 
 let mainWindow
 

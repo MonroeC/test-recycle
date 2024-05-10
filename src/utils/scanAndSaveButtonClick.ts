@@ -16,7 +16,7 @@ const ERR_MAP = {
   80030001: '扫描操作失败'
 }
 
-function scanAndSaveButtonClick(ESLFunctions, filePath, errcb) {
+function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
   const time = new Date().getTime()
   const current_count = 1
   const current_fileFormat = ESLFunctions?.FF_JPEG
@@ -74,24 +74,29 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb) {
 
   /** 实例 */
   const eslObj = ESLFunctions.ESLCreate()
-  eslObj.ScanAndSave_Simple(connectionParam, scanParams, saveParam, function (isSuccess, result) {
-    if (isSuccess) {
-      if (result.eventType == ESLFunctions.EVENT_SCANPAGE_COMPLETE) {
-        console.log('扫描仪一页')
-        window.electronApi.createPicturesDir(`/${time}`)
+  eslObj.ScanAndSave_Simple(
+    connectionParam,
+    scanParams,
+    saveParam,
+    function (isSuccess, result) {
+      if (isSuccess) {
+        if (result.eventType == ESLFunctions.EVENT_SCANPAGE_COMPLETE) {
+          console.log('扫描仪一页')
+          window.electronApi.createPicturesDir(`/${time}`)
+        }
+        if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
+        }
+        if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
+        }
+        if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
+          window.electronApi.pictureSave(saveParam.filePath)
+        }
+      } else {
+        errcb && errcb(result?.errorCode?.toString(16), ERR_MAP[result?.errorCode?.toString(16)])
       }
-      if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
-      }
-      if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
-      }
-      if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
-        window.electronApi.pictureSave(saveParam.filePath)
-      }
-    } else {
-      // message.error('扫描失败' + ERR_MAP[result.errorCode.toString(16)])
-      errcb && errcb(ERR_MAP[result.errorCode.toString(16)])
-    }
-  })
+    },
+    closecb
+  )
 }
 
 export default scanAndSaveButtonClick

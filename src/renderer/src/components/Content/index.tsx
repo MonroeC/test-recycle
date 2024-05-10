@@ -2,6 +2,7 @@ import { Button, Flex, message } from 'antd'
 import { CloseCircleFilled, CheckCircleFilled } from '@ant-design/icons'
 import ConfirmRecycle from '../ConfirmReccycle'
 import ResultModal from '../ResultModal'
+import scanAndSaveButtonClick from '../../../../utils/scanAndSaveButtonClick'
 import './index.css'
 import { useEffect, useRef, useState } from 'react'
 
@@ -25,29 +26,47 @@ const Content = ({
   const [saveVisible, setSaveVisible] = useState(false)
   const [status, setStatus] = useState('')
   const confirmRef = useRef<any>(null)
+
+  const autoFun = () => {
+    scanAndSaveButtonClick(
+      ESLFunctions,
+      filePath,
+      (errCode, msg) => {
+        if (window.isAuto) {
+          console.log(errCode, msg)
+          if (errCode !== 40008002) {
+            message.error(msg ?? '扫描仪启动失败')
+          }
+        }
+      },
+      () => {
+        if (window.isAuto) {
+          autoFun()
+        }
+      }
+    )
+  }
   useEffect(() => {
-    /**
-     * 开启定时任务执行扫描
-     */
+    window.isAuto = isAuto
     if (isAuto && epsonConnect) {
-      console.log('自动扫描')
-      // autoFun(isAuto)
+      autoFun()
     }
   }, [isAuto, epsonConnect])
 
   useEffect(() => {
     window.electron.ipcRenderer.on('picture-save-response', (_event, arg) => {
-      if (arg === 'loading') {
-        setSaveVisible(true)
-        setStatus('loading')
-      } else {
-        confirmRef.current?.setLoading(false)
-        if (arg.success) {
-          // message.success('单据回收成功')
-          setStatus('success')
+      if (!window.isAuto) {
+        if (arg === 'loading') {
+          setSaveVisible(true)
+          setStatus('loading')
         } else {
-          message.error(arg.errMeaasge ?? '单据上传失败')
-          setStatus('error')
+          confirmRef.current?.setLoading(false)
+          if (arg.success) {
+            setStatus('success')
+          } else {
+            message.error(arg.errMeaasge ?? '单据上传失败')
+            setStatus('error')
+          }
         }
       }
     })
