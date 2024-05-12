@@ -29,9 +29,11 @@ const Content = ({
 
   const autoFun = () => {
     scanAndSaveButtonClick(
+      // @ts-ignore
       ESLFunctions,
       filePath,
       (errCode, msg) => {
+        // @ts-ignore
         if (window.isAuto) {
           console.log(errCode, msg)
           if (errCode !== 40008002) {
@@ -40,14 +42,15 @@ const Content = ({
         }
       },
       () => {
-        if (window.isAuto) {
+        if ((window as any).isAuto) {
           autoFun()
         }
       }
     )
   }
   useEffect(() => {
-    window.isAuto = isAuto
+    // ts-ignore
+    ;(window as any).isAuto = isAuto
     if (isAuto && epsonConnect) {
       autoFun()
     }
@@ -55,13 +58,13 @@ const Content = ({
 
   useEffect(() => {
     window.electron.ipcRenderer.on('picture-save-response', (_event, arg) => {
-      if (!window.isAuto) {
+      if (!(window as any).isAuto) {
         if (arg === 'loading') {
-          setSaveVisible(true)
           setStatus('loading')
         } else {
           confirmRef.current?.setLoading(false)
-          if (arg.success) {
+          setSaveVisible(true)
+          if (arg === 'success') {
             setStatus('success')
           } else {
             message.error(arg.errMeaasge ?? '单据上传失败')

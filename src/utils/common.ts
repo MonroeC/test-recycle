@@ -50,7 +50,7 @@ const checkScannerStatus = (cb) => {
   }
 }
 
-const checkRestFiles = (cb) => {
+const checkRestFiles = (cb, db) => {
   fs.readdir(filePath, { withFileTypes: true }, (err, files) => {
     if (err) {
       console.log('Error reading directory:', err)
@@ -60,37 +60,33 @@ const checkRestFiles = (cb) => {
     const folders = files.filter((file) => file.isDirectory()).map((folder) => folder.name)
 
     folders?.forEach((one) => {
-      if (getFiles(`${filePath}/${one}`)?.length) {
-        cb && cb(`${filePath}/${one}`)
+      /**
+       * 文件夹是否在上传进程中
+       */
+      const isNotUplaod = db
+        .get('recycleInfos')
+        .filter({ parentPath: `${filePath}/${one}`, isUpload: 0 })
+        .value()?.length
+      console.log(isNotUplaod, 888)
+      if (isNotUplaod) {
+        if (getFiles(`${filePath}/${one}`)?.length) {
+          cb && cb(`${filePath}/${one}`)
+        }
       }
     })
     console.log(folders)
   })
 }
 
-const savePicture = (arg, db, event) => {
-  event?.reply('picture-save-response', 'loading')
+const savePicture = (arg, db) => {
   const files = getFiles(arg)
   const data = new FormData()
-  // const splits = arg?.split('/')
-  // const time = splits?.[splits?.length - 1]
-  const infos: any = []
   files?.forEach((one) => {
     data.append('files', fs.createReadStream(one))
-    infos.push({
-      filePath: one,
-      createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
-      parentPath: arg,
-      isUpload: false,
-      id: uuid.v4()
-    })
   })
 
   data.append('deviceSn', 'LBCDJSB001')
   /** 保存文件成功后将数据写入本地数据库 */
-  db.get('recycleInfos')
-    .push(...infos)
-    .write()
 
   const config = {
     method: 'post',
@@ -102,28 +98,72 @@ const savePicture = (arg, db, event) => {
     },
     data: data
   }
-
+  db.get('recycleInfos')
+    .filter({ parentPath: arg })
+    .each((one) => {
+      one.isUpload = 1
+      one.uploadingTime = moment().format('YYYY-MM-DD HH:mm:ss')
+    })
+    .write()
   axios
     .request(config)
     .then((response) => {
       logger.info(JSON.stringify(response.data))
-      /** 通知渲染层弹出回收反馈 */
-      event?.reply('picture-save-response', response.data)
-      /** 更改数据库数据 */
-      db.get('recycleInfos')
-        .filter({ parentPath: arg })
-        .each((one) => {
-          one.isUpload = true
-          one.updateTime = moment().format('YYYY-MM-DD HH:mm:ss')
-        })
-        .write()
-      /** 删除文件 */
-      removeFileDir(arg)
+      if (response.data?.success) {
+        /** 更改数据库数据 */
+        db.get('recycleInfos')
+          .filter({ parentPath: arg })
+          .each((one) => {
+            one.isUpload = 2
+            one.uploadedTime = moment().format('YYYY-MM-DD HH:mm:ss')
+          })
+          .write()
+        /** 删除文件 */
+        removeFileDir(arg)
+      } else {
+        db.get('recycleInfos')
+          .filter({ parentPath: arg })
+          .each((one) => {
+            one.isUpload = 0
+          })
+          .write()
+      }
     })
     .catch((error) => {
       logger.info(error)
-      event?.reply('picture-save-response', error?.data)
+      db.get('recycleInfos')
+        .filter({ parentPath: arg })
+        .each((one) => {
+          one.isUpload = 0
+        })
+        .write()
     })
 }
 
-export { createDir, initDb, checkScannerStatus, savePicture, checkRestFiles }
+const saveLocalPicture = (arg, db, event) => {
+  try {
+    logger.info(arg, 777)
+    const files = getFiles(arg)
+    const infos: any = []
+    files?.forEach((one) => {
+      infos.push({
+        filePath: one,
+        createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+        parentPath: arg,
+        isUpload: 0,
+        id: uuid.v4()
+      })
+    })
+
+    /** 保存文件成功后将数据写入本地数据库 */
+    db.get('recycleInfos')
+      .push(...infos)
+      .write()
+    event?.reply('picture-save-response', 'success')
+  } catch (error) {
+    logger.info(error)
+    event?.reply('picture-save-response', 'error')
+  }
+}
+
+export { createDir, initDb, checkScannerStatus, savePicture, checkRestFiles, saveLocalPicture }

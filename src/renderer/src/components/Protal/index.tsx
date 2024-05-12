@@ -38,8 +38,8 @@ const Portal = () => {
   useEffect(() => {
     return () => {
       // 卸 载的时候关闭扫描进程
-      const eslObj = ESLFunctions.ESLCreate()
-      eslObj.Close(() => {}, 'http://localhost:51000')
+      // const eslObj = ESLFunctions.ESLCreate()
+      // eslObj.Close(() => {}, 'http://localhost:51000')
     }
   }, [])
 

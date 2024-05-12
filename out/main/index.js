@@ -2,14 +2,14 @@
 const electron = require("electron");
 const require$$1 = require("path");
 const utils = require("@electron-toolkit/utils");
-const fs$4 = require("fs");
+const fs$3 = require("fs");
 const os = require("os");
 const si = require("systeminformation");
 const usb = require("usb");
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
 const pino = require("pino");
-const axios = require("axios");
+require("axios");
 const require$$1$1 = require("util");
 const require$$0$1 = require("stream");
 const require$$3 = require("http");
@@ -18,9 +18,6 @@ const require$$5 = require("url");
 const uuid = require("node-uuid");
 const moment = require("moment");
 const icon = require$$1.join(__dirname, "../../resources/icon.png");
-function getDefaultExportFromCjs(x) {
-  return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
-}
 var Stream$2 = require$$0$1.Stream;
 var util$2 = require$$1$1;
 var delayed_stream = DelayedStream$1;
@@ -11230,12 +11227,11 @@ var path$2 = require$$1;
 var http = require$$3;
 var https = require$$4;
 var parseUrl = require$$5.parse;
-var fs$3 = fs$4;
+var fs$2 = fs$3;
 var Stream = require$$0$1.Stream;
 var mime = mimeTypes;
 var asynckit = asynckit$1;
 var populate = populate$1;
-var form_data = FormData;
 util.inherits(FormData, CombinedStream);
 function FormData(options) {
   if (!(this instanceof FormData)) {
@@ -11295,7 +11291,7 @@ FormData.prototype._lengthRetriever = function(value, callback) {
     if (value.end != void 0 && value.end != Infinity && value.start != void 0) {
       callback(null, value.end + 1 - (value.start ? value.start : 0));
     } else {
-      fs$3.stat(value.path, function(err, stat) {
+      fs$2.stat(value.path, function(err, stat) {
         var fileSize;
         if (err) {
           callback(err);
@@ -11533,20 +11529,7 @@ FormData.prototype._error = function(err) {
 FormData.prototype.toString = function() {
   return "[object FormData]";
 };
-const FormData$1 = /* @__PURE__ */ getDefaultExportFromCjs(form_data);
-const fs$2 = require("fs");
-const removeFileDir = (path2) => {
-  const files = fs$2.readdirSync(path2);
-  for (const item of files) {
-    const stats = fs$2.statSync(`${path2}/${item}`);
-    if (stats.isDirectory()) {
-      removeFileDir(`${path2}/${item}`);
-    } else {
-      fs$2.unlinkSync(`${path2}/${item}`);
-    }
-  }
-  fs$2.rmdirSync(path2);
-};
+require("fs");
 const fs$1 = require("fs");
 const path$1 = require("path");
 const getFiles = function(dir) {
@@ -11567,11 +11550,10 @@ const getFiles = function(dir) {
 const SCANNER_VENDOR_ID$1 = 1208;
 const SCANNER_PRODUCT_ID$1 = 359;
 const logger$1 = pino();
-const homeDirectory$1 = os.homedir();
-const filePath$1 = `${homeDirectory$1}/recyclePictures`;
+os.homedir();
 const createDir = (filePath2) => {
-  if (!fs$4.existsSync(filePath2)) {
-    fs$4.mkdirSync(filePath2);
+  if (!fs$3.existsSync(filePath2)) {
+    fs$3.mkdirSync(filePath2);
     console.log("create dir success");
   } else {
     console.log("dir already exists");
@@ -11590,60 +11572,26 @@ const checkScannerStatus = (cb) => {
     cb && cb(false);
   }
 };
-const checkRestFiles = (cb) => {
-  fs$4.readdir(filePath$1, { withFileTypes: true }, (err, files) => {
-    if (err) {
-      console.log("Error reading directory:", err);
-      return;
-    }
-    const folders = files.filter((file) => file.isDirectory()).map((folder) => folder.name);
-    folders?.forEach((one) => {
-      if (getFiles(`${filePath$1}/${one}`)?.length) {
-        cb && cb(`${filePath$1}/${one}`);
-      }
+const saveLocalPicture = (arg, db2, event) => {
+  try {
+    logger$1.info(arg, 777);
+    const files = getFiles(arg);
+    const infos = [];
+    files?.forEach((one) => {
+      infos.push({
+        filePath: one,
+        createTime: moment().format("YYYY-MM-DD HH:mm:ss"),
+        parentPath: arg,
+        isUpload: 0,
+        id: uuid.v4()
+      });
     });
-    console.log(folders);
-  });
-};
-const savePicture = (arg, db2, event) => {
-  event?.reply("picture-save-response", "loading");
-  const files = getFiles(arg);
-  const data = new FormData$1();
-  const infos = [];
-  files?.forEach((one) => {
-    data.append("files", fs$4.createReadStream(one));
-    infos.push({
-      filePath: one,
-      createTime: moment().format("YYYY-MM-DD HH:mm:ss"),
-      parentPath: arg,
-      isUpload: false,
-      id: uuid.v4()
-    });
-  });
-  data.append("deviceSn", "LBCDJSB001");
-  db2.get("recycleInfos").push(...infos).write();
-  const config = {
-    method: "post",
-    maxBodyLength: Infinity,
-    url: "https://zz-test05.pinming.org/material-client-management/api/common/terminalRecycle",
-    // url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
-    headers: {
-      "content-type": "multipart/form-data"
-    },
-    data
-  };
-  axios.request(config).then((response) => {
-    logger$1.info(JSON.stringify(response.data));
-    event?.reply("picture-save-response", response.data);
-    db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
-      one.isUpload = true;
-      one.updateTime = moment().format("YYYY-MM-DD HH:mm:ss");
-    }).write();
-    removeFileDir(arg);
-  }).catch((error) => {
+    db2.get("recycleInfos").push(...infos).write();
+    event?.reply("picture-save-response", "success");
+  } catch (error) {
     logger$1.info(error);
-    event?.reply("picture-save-response", error?.data);
-  });
+    event?.reply("picture-save-response", "error");
+  }
 };
 const fs = require("fs");
 const path = require("path");
@@ -11671,7 +11619,7 @@ const db = low(adapter);
 db.defaults({ recycleInfos: [], isAuto: false }).write();
 const SCANNER_VENDOR_ID = 1208;
 const SCANNER_PRODUCT_ID = 359;
-const INTERVAL_TIME = 2e4;
+const INTERVAL_TIME = 1e4;
 let mainWindow;
 function createWindow() {
   mainWindow = new electron.BrowserWindow({
@@ -11713,10 +11661,9 @@ function createWindow() {
 }
 const checkInterval = () => {
   setInterval(() => {
-    checkRestFiles((value) => savePicture(value, db, null));
   }, INTERVAL_TIME);
 };
-fs$4.watch(filePath, () => {
+fs$3.watch(filePath, () => {
   const fileCount = getFileCount(filePath);
   mainWindow?.webContents.send("file-count-changed", fileCount);
 });
@@ -11742,16 +11689,16 @@ electron.app.whenReady().then(() => {
   electron.ipcMain.on("create-pictures-dir", (_event, arg) => {
     logger.info(arg, "arg");
     const dir = `${homeDirectory}/recyclePictures/${arg}`;
-    if (!fs$4.existsSync(dir)) {
-      fs$4.mkdirSync(dir);
+    if (!fs$3.existsSync(dir)) {
+      fs$3.mkdirSync(dir);
     }
   });
   electron.ipcMain.on("change-auto", (event, arg) => {
     db.update("isAuto", () => arg).write();
     event.reply("change-auto-response", arg);
   });
-  electron.ipcMain.on("picture-save", (event, arg) => {
-    savePicture(arg, db, event);
+  electron.ipcMain.on("local-picture-save", (event, arg) => {
+    saveLocalPicture(arg, db, event);
   });
   createWindow();
   electron.app.on("activate", function() {

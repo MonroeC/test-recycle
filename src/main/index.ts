@@ -9,7 +9,13 @@ import usb from 'usb'
 import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import pino from 'pino'
-import { createDir, savePicture, checkScannerStatus, checkRestFiles } from '../utils/common'
+import {
+  createDir,
+  // savePicture,
+  saveLocalPicture,
+  checkScannerStatus
+  // checkRestFiles
+} from '../utils/common'
 import getFileCount from '../utils/getFileCount'
 
 const logger = pino()
@@ -24,10 +30,11 @@ createDir(filePath)
 const adapter = new FileSync(`${homeDirectory}/db.json`) // 指定数据文件
 const db = low(adapter)
 db.defaults({ recycleInfos: [], isAuto: false }).write()
+// db.get('recycleInfos').remove().write()
 
 const SCANNER_VENDOR_ID = 1208
 const SCANNER_PRODUCT_ID = 359
-const INTERVAL_TIME = 20000
+const INTERVAL_TIME = 10000
 
 let mainWindow
 
@@ -90,7 +97,8 @@ function createWindow(): void {
 
 const checkInterval = () => {
   setInterval(() => {
-    checkRestFiles((value) => savePicture(value, db, null))
+    // TODO
+    // checkRestFiles((value) => savePicture(value, db, null), db)
   }, INTERVAL_TIME)
 }
 
@@ -164,8 +172,9 @@ app.whenReady().then(() => {
     event.reply('change-auto-response', arg)
   })
 
-  ipcMain.on('picture-save', (event, arg) => {
-    savePicture(arg, db, event)
+  ipcMain.on('local-picture-save', (event, arg) => {
+    // savePicture(arg, db, event)
+    saveLocalPicture(arg, db, event)
   })
 
   createWindow()

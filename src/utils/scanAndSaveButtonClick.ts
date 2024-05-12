@@ -69,7 +69,7 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
   saveParam.destination = ESLFunctions.DEST_FILE
   /** 文件格式 */
   saveParam.fileFormat = current_fileFormat
-  saveParam.filePath = `${filePath}/${time}`
+  saveParam.filePath = `${filePath}`
   saveParam.fileName = current_count
 
   /** 实例 */
@@ -81,15 +81,15 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
     function (isSuccess, result) {
       if (isSuccess) {
         if (result.eventType == ESLFunctions.EVENT_SCANPAGE_COMPLETE) {
-          console.log('扫描仪一页')
           window.electronApi.createPicturesDir(`/${time}`)
+          console.log('扫描仪一页')
         }
         if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
         }
         if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
         }
         if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
-          window.electronApi.pictureSave(saveParam.filePath)
+          window.electronApi.saveLocalPicture(saveParam.filePath)
         }
       } else {
         errcb && errcb(result?.errorCode?.toString(16), ERR_MAP[result?.errorCode?.toString(16)])

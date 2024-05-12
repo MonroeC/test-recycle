@@ -20,10 +20,12 @@ const ConfirmRecycle = ({ filePath }, ref) => {
   const handleRecycle = (): void => {
     setLoading(true)
     // @ts-ignore
-    scanAndSaveButtonClick(ESLFunctions, filePath, (msg) => {
+    scanAndSaveButtonClick(ESLFunctions, filePath, (errCode, msg) => {
       setLoading(false)
-      setVisible(true)
-      setSubTitle(msg)
+      if (errCode !== 40008002) {
+        setVisible(true)
+        setSubTitle(msg ?? '扫描仪启动失败')
+      }
     })
   }
 

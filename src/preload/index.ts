@@ -13,7 +13,8 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electronApi', {
       createPicturesDir: (dir) => ipcRenderer.send('create-pictures-dir', dir),
       pictureSave: (dir) => ipcRenderer.send('picture-save', dir),
-      changeAuto: (isAuto) => ipcRenderer.send('change-auto', isAuto)
+      changeAuto: (isAuto) => ipcRenderer.send('change-auto', isAuto),
+      saveLocalPicture: (dir) => ipcRenderer.send('local-picture-save', dir)
     })
   } catch (error) {
     console.error(error)

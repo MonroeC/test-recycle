@@ -1,6 +1,6 @@
 {
   "name": "jishi-recycle",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "品茗基石单据回收系统",
   "main": "./out/main/index.js",
   "author": "pinming",
