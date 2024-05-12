@@ -11574,8 +11574,8 @@ const checkScannerStatus = (cb) => {
 };
 const saveLocalPicture = (arg, db2, event) => {
   try {
-    logger$1.info(arg, 777);
     const files = getFiles(arg);
+    console.log(files, db2, uuid.v4());
     const infos = [];
     files?.forEach((one) => {
       infos.push({
@@ -11611,6 +11611,7 @@ const getFileCount = function(dir) {
   return res?.length;
 };
 const logger = pino();
+const log = require("electron-log");
 const homeDirectory = os.homedir();
 const filePath = `${homeDirectory}/recyclePictures`;
 createDir(filePath);
@@ -11687,10 +11688,13 @@ electron.app.whenReady().then(() => {
   });
   electron.ipcMain.on("ping", () => logger.info("pong"));
   electron.ipcMain.on("create-pictures-dir", (_event, arg) => {
-    logger.info(arg, "arg");
-    const dir = `${homeDirectory}/recyclePictures/${arg}`;
-    if (!fs$3.existsSync(dir)) {
-      fs$3.mkdirSync(dir);
+    try {
+      const dir = `${homeDirectory}/recyclePictures/${arg}`;
+      if (!fs$3.existsSync(dir)) {
+        fs$3.mkdirSync(dir);
+      }
+    } catch (err) {
+      log.error(err, "err");
     }
   });
   electron.ipcMain.on("change-auto", (event, arg) => {

@@ -142,7 +142,6 @@ const savePicture = (arg, db) => {
 
 const saveLocalPicture = (arg, db, event) => {
   try {
-    logger.info(arg, 777)
     const files = getFiles(arg)
     const infos: any = []
     files?.forEach((one) => {

@@ -69,7 +69,7 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
   saveParam.destination = ESLFunctions.DEST_FILE
   /** 文件格式 */
   saveParam.fileFormat = current_fileFormat
-  saveParam.filePath = `${filePath}`
+  saveParam.filePath = `${filePath}/${time}`
   saveParam.fileName = current_count
 
   /** 实例 */

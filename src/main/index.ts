@@ -19,7 +19,7 @@ import {
 import getFileCount from '../utils/getFileCount'
 
 const logger = pino()
-
+const log = require('electron-log')
 // 获取用户目录
 const homeDirectory = os.homedir()
 /** 需要监听的文件路径 */
@@ -157,11 +157,14 @@ app.whenReady().then(() => {
    * 监听来自渲染进程的事件: 单据回收
    */
   ipcMain.on('create-pictures-dir', (_event, arg) => {
-    logger.info(arg, 'arg')
-    // 创建图片文件夹
-    const dir = `${homeDirectory}/recyclePictures/${arg}`
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir)
+    try {
+      // 创建图片文件夹
+      const dir = `${homeDirectory}/recyclePictures/${arg}`
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir)
+      }
+    } catch (err) {
+      log.error(err, 'err')
     }
   })
   /**
