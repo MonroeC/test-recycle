@@ -17,7 +17,6 @@ const ERR_MAP = {
 }
 
 function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
-  const time = new Date().getTime()
   const current_count = 1
   const current_fileFormat = ESLFunctions?.FF_JPEG
   /**
@@ -59,7 +58,7 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
   /** 空白页跳过  BPS_NONE 不跳过*/
   scanParams.optBlankPageSkip = ESLFunctions.BPS_NONE
   /** 自动送纸：AFM_ON  AFM_NONE */
-  // scanParams.autoFeedingMode = ESLFunctions.AFM_ON
+  scanParams.autoFeedingMode = ESLFunctions.AFM_ON
   /** 偏斜矫正 SC_EDGE 通过边缘矫正 */
   scanParams.skewCorrect = ESLFunctions.SC_EDGE
 
@@ -84,11 +83,14 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
           console.log('扫描仪一页')
         }
         if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
+          console.log('扫描仪全部')
         }
         if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
+          console.log('保存一页')
         }
         if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
-          window.electronApi.saveLocalPicture(saveParam.filePath)
+          console.log('保存全部')
+          // window.electronApi.saveLocalPicture(saveParam.filePath)
         }
       } else {
         errcb && errcb(result?.errorCode?.toString(16), ERR_MAP[result?.errorCode?.toString(16)])

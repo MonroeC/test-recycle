@@ -1,6 +1,5 @@
 import save from './save'
 function scan(params) {
-  console.log(params, 666)
   /** 扫描对象 */
   const scanParams: any = {}
   /** 文档来源 */
@@ -39,19 +38,27 @@ function scan(params) {
   window?.eslObj?.Scan(scanParams, function (isSuccess, result) {
     if (isSuccess) {
       if (result.eventType == ESLFunctions.EVENT_SCANPAGE_COMPLETE) {
+        console.log(result, 'sigele')
       }
       if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
-        save(params)
+        console.log(result, 'all')
+        if (!window.isAutoScanning) {
+          console.log('stop')
+        } else {
+          params.scanAllSuccessCallback()
+        }
       }
     } else {
-      params.saveErrorCallback(result.errorCode)
+      params.scanErrorCallback(result.errorCode)
     }
-    if (!window.isAuto && window.scanOpen) {
-      window.eslObj.Close((isSuccess) => {
-        if (isSuccess) {
-          window.scanOpen = false
-        }
-      })
+    console.log(!window.isAutoScanning, window.scanOpen, 777)
+    if (!window.isAutoScanning && window.scanOpen) {
+      // window.eslObj.Close((isSuccess) => {
+      //   if (isSuccess) {
+      //     window.scanOpen = false
+      //   }
+      // })
+      save(params)
     }
   })
 }

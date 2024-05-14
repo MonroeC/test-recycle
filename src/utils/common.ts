@@ -3,11 +3,13 @@ import axios from 'axios'
 import FormData from 'form-data'
 import os from 'os'
 import usb from 'usb'
+import { join } from 'path'
 import uuid from 'node-uuid'
 import pino from 'pino'
 import removeFileDir from '../utils/removeDir'
 import getFiles from '../utils/getFiles'
 import moment from 'moment'
+import moveFiles from './moveFiles'
 
 const SCANNER_VENDOR_ID = 1208
 const SCANNER_PRODUCT_ID = 359
@@ -16,7 +18,8 @@ const logger = pino()
 // 获取用户目录
 const homeDirectory = os.homedir()
 /** 需要监听的文件路径 */
-const filePath = `${homeDirectory}/recyclePictures` // 文件路径
+const filePath = join(homeDirectory, 'recycle-pictures-A')
+const targetDir = join(homeDirectory, 'recycle-pictures-B')
 
 const createDir = (filePath) => {
   if (!fs.existsSync(filePath)) {
@@ -51,26 +54,21 @@ const checkScannerStatus = (cb) => {
 }
 
 const checkRestFiles = (cb, db) => {
-  fs.readdir(filePath, { withFileTypes: true }, (err, files) => {
+  fs.readdir(targetDir, { withFileTypes: true }, (err, files) => {
     if (err) {
       console.log('Error reading directory:', err)
       return
     }
     // 过滤出所有的文件夹
     const folders = files.filter((file) => file.isDirectory()).map((folder) => folder.name)
-
     folders?.forEach((one) => {
       /**
        * 文件夹是否在上传进程中
        */
-      const isNotUplaod = db
-        .get('recycleInfos')
-        .filter({ parentPath: `${filePath}/${one}`, isUpload: 0 })
-        .value()?.length
-      console.log(isNotUplaod, 888)
+      const isNotUplaod = db.get('recycleInfos').filter({ isUpload: 0 }).value()?.length
       if (isNotUplaod) {
-        if (getFiles(`${filePath}/${one}`)?.length) {
-          cb && cb(`${filePath}/${one}`)
+        if (getFiles(`${targetDir}/${one}`)?.length) {
+          cb && cb(`${targetDir}/${one}`)
         }
       }
     })
@@ -79,6 +77,7 @@ const checkRestFiles = (cb, db) => {
 }
 
 const savePicture = (arg, db) => {
+  console.log(arg, 88)
   const files = getFiles(arg)
   const data = new FormData()
   files?.forEach((one) => {
@@ -98,9 +97,15 @@ const savePicture = (arg, db) => {
     },
     data: data
   }
+  console.log(
+    db.get('recycleInfos').value(),
+    db.get('recycleInfos').filter({ parentPath: arg }).value(),
+    9090
+  )
   db.get('recycleInfos')
     .filter({ parentPath: arg })
     .each((one) => {
+      console.log(33)
       one.isUpload = 1
       one.uploadingTime = moment().format('YYYY-MM-DD HH:mm:ss')
     })

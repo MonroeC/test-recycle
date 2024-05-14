@@ -2,21 +2,58 @@
 const electron = require("electron");
 const require$$1 = require("path");
 const utils = require("@electron-toolkit/utils");
-const fs$2 = require("fs");
+const fs$5 = require("fs");
 const os = require("os");
 const si = require("systeminformation");
 const usb = require("usb");
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
 const pino = require("pino");
-require("axios");
+const uuid = require("node-uuid");
+const axios = require("axios");
 const require$$1$1 = require("util");
 const require$$0$1 = require("stream");
 const require$$3 = require("http");
 const require$$4 = require("https");
 const require$$5 = require("url");
-require("moment");
+const moment = require("moment");
 const icon = require$$1.join(__dirname, "../../resources/icon.png");
+const fs$4 = require("fs");
+const path$3 = require("path");
+const moveFiles = (sourceDir, targetDir2, callBack, db2) => {
+  try {
+    if (!fs$4.existsSync(targetDir2)) {
+      fs$4.mkdirSync(targetDir2);
+    }
+    const files = fs$4.readdirSync(sourceDir);
+    const images = files.filter((file) => path$3.extname(file).toLowerCase() === ".jpg");
+    console.log(images, "images");
+    for (let i = 0; i < images.length; i += 2) {
+      const uuidTemp = uuid.v4();
+      const groupFolder = path$3.join(targetDir2, uuidTemp);
+      fs$4.mkdirSync(groupFolder);
+      for (let j = 0; j < 2; j++) {
+        if (i + j < images.length) {
+          const sourceFile = path$3.join(sourceDir, images[i + j]);
+          const targetFile = path$3.join(groupFolder, images[i + j]);
+          db2.get("recycleInfos").push({
+            isUpload: 0,
+            filePath: targetFile,
+            parentPath: `${targetDir2}/${uuidTemp}`
+          }).write();
+          fs$4.renameSync(sourceFile, targetFile);
+          console.log("remove");
+        }
+      }
+    }
+    callBack();
+  } catch (error) {
+    console.log(error, "error");
+  }
+};
+function getDefaultExportFromCjs(x) {
+  return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
+}
 var Stream$2 = require$$0$1.Stream;
 var util$2 = require$$1$1;
 var delayed_stream = DelayedStream$1;
@@ -11222,15 +11259,16 @@ var populate$1 = function(dst, src) {
 };
 var CombinedStream = combined_stream;
 var util = require$$1$1;
-var path$1 = require$$1;
+var path$2 = require$$1;
 var http = require$$3;
 var https = require$$4;
 var parseUrl = require$$5.parse;
-var fs$1 = fs$2;
+var fs$3 = fs$5;
 var Stream = require$$0$1.Stream;
 var mime = mimeTypes;
 var asynckit = asynckit$1;
 var populate = populate$1;
+var form_data = FormData;
 util.inherits(FormData, CombinedStream);
 function FormData(options) {
   if (!(this instanceof FormData)) {
@@ -11290,7 +11328,7 @@ FormData.prototype._lengthRetriever = function(value, callback) {
     if (value.end != void 0 && value.end != Infinity && value.start != void 0) {
       callback(null, value.end + 1 - (value.start ? value.start : 0));
     } else {
-      fs$1.stat(value.path, function(err, stat) {
+      fs$3.stat(value.path, function(err, stat) {
         var fileSize;
         if (err) {
           callback(err);
@@ -11348,11 +11386,11 @@ FormData.prototype._multiPartHeader = function(field, value, options) {
 FormData.prototype._getContentDisposition = function(value, options) {
   var filename, contentDisposition;
   if (typeof options.filepath === "string") {
-    filename = path$1.normalize(options.filepath).replace(/\\/g, "/");
+    filename = path$2.normalize(options.filepath).replace(/\\/g, "/");
   } else if (options.filename || value.name || value.path) {
-    filename = path$1.basename(options.filename || value.name || value.path);
+    filename = path$2.basename(options.filename || value.name || value.path);
   } else if (value.readable && value.hasOwnProperty("httpVersion")) {
-    filename = path$1.basename(value.client._httpMessage.path || "");
+    filename = path$2.basename(value.client._httpMessage.path || "");
   }
   if (filename) {
     contentDisposition = 'filename="' + filename + '"';
@@ -11528,16 +11566,46 @@ FormData.prototype._error = function(err) {
 FormData.prototype.toString = function() {
   return "[object FormData]";
 };
-require("fs");
-require("fs");
-require("path");
+const FormData$1 = /* @__PURE__ */ getDefaultExportFromCjs(form_data);
+const fs$2 = require("fs");
+const removeFileDir = (path2) => {
+  const files = fs$2.readdirSync(path2);
+  for (const item of files) {
+    const stats = fs$2.statSync(`${path2}/${item}`);
+    if (stats.isDirectory()) {
+      removeFileDir(`${path2}/${item}`);
+    } else {
+      fs$2.unlinkSync(`${path2}/${item}`);
+    }
+  }
+  fs$2.rmdirSync(path2);
+};
+const fs$1 = require("fs");
+const path$1 = require("path");
+const getFiles = function(dir) {
+  const res = [];
+  function traverse(dir2) {
+    fs$1.readdirSync(dir2).forEach((file) => {
+      const pathname = path$1.join(dir2, file);
+      if (fs$1.statSync(pathname).isDirectory()) {
+        traverse(pathname);
+      } else {
+        res.push(pathname);
+      }
+    });
+  }
+  traverse(dir);
+  return res;
+};
 const SCANNER_VENDOR_ID$1 = 1208;
 const SCANNER_PRODUCT_ID$1 = 359;
 const logger$1 = pino();
-os.homedir();
+const homeDirectory$1 = os.homedir();
+require$$1.join(homeDirectory$1, "recycle-pictures-A");
+const targetDir$1 = require$$1.join(homeDirectory$1, "recycle-pictures-B");
 const createDir = (filePath2) => {
-  if (!fs$2.existsSync(filePath2)) {
-    fs$2.mkdirSync(filePath2);
+  if (!fs$5.existsSync(filePath2)) {
+    fs$5.mkdirSync(filePath2);
     console.log("create dir success");
   } else {
     console.log("dir already exists");
@@ -11555,6 +11623,72 @@ const checkScannerStatus = (cb) => {
     console.log("Scanner is not connected.");
     cb && cb(false);
   }
+};
+const checkRestFiles = (cb, db2) => {
+  fs$5.readdir(targetDir$1, { withFileTypes: true }, (err, files) => {
+    if (err) {
+      console.log("Error reading directory:", err);
+      return;
+    }
+    const folders = files.filter((file) => file.isDirectory()).map((folder) => folder.name);
+    folders?.forEach((one) => {
+      const isNotUplaod = db2.get("recycleInfos").filter({ isUpload: 0 }).value()?.length;
+      if (isNotUplaod) {
+        if (getFiles(`${targetDir$1}/${one}`)?.length) {
+          cb && cb(`${targetDir$1}/${one}`);
+        }
+      }
+    });
+    console.log(folders);
+  });
+};
+const savePicture = (arg, db2) => {
+  console.log(arg, 88);
+  const files = getFiles(arg);
+  const data = new FormData$1();
+  files?.forEach((one) => {
+    data.append("files", fs$5.createReadStream(one));
+  });
+  data.append("deviceSn", "LBCDJSB001");
+  const config = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "https://zz-test05.pinming.org/material-client-management/api/common/terminalRecycle",
+    // url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
+    headers: {
+      "content-type": "multipart/form-data"
+    },
+    data
+  };
+  console.log(
+    db2.get("recycleInfos").value(),
+    db2.get("recycleInfos").filter({ parentPath: arg }).value(),
+    9090
+  );
+  db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
+    console.log(33);
+    one.isUpload = 1;
+    one.uploadingTime = moment().format("YYYY-MM-DD HH:mm:ss");
+  }).write();
+  axios.request(config).then((response) => {
+    logger$1.info(JSON.stringify(response.data));
+    if (response.data?.success) {
+      db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
+        one.isUpload = 2;
+        one.uploadedTime = moment().format("YYYY-MM-DD HH:mm:ss");
+      }).write();
+      removeFileDir(arg);
+    } else {
+      db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
+        one.isUpload = 0;
+      }).write();
+    }
+  }).catch((error) => {
+    logger$1.info(error);
+    db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
+      one.isUpload = 0;
+    }).write();
+  });
 };
 const saveLocalPicture = (arg, db2, event) => {
   try {
@@ -11589,11 +11723,14 @@ const getFileCount = function(dir) {
 const logger = pino();
 const log = require("electron-log");
 const homeDirectory = os.homedir();
-const filePath = `${homeDirectory}/recyclePictures`;
+const filePath = require$$1.join(homeDirectory, "recycle-pictures-A");
+const targetDir = require$$1.join(homeDirectory, "recycle-pictures-B");
 createDir(filePath);
+createDir(targetDir);
 const adapter = new FileSync(`${homeDirectory}/db.json`);
 const db = low(adapter);
 db.defaults({ recycleInfos: [], isAuto: false }).write();
+db.get("recycleInfos").remove().write();
 const SCANNER_VENDOR_ID = 1208;
 const SCANNER_PRODUCT_ID = 359;
 const INTERVAL_TIME = 1e4;
@@ -11618,7 +11755,8 @@ function createWindow() {
       mainWindow?.webContents.send("usb-change-device", value);
     });
     checkInterval();
-    const fileCount = getFileCount(filePath);
+    const fileCount = getFileCount(targetDir);
+    console.log(fileCount, "filecount");
     mainWindow?.webContents.send("file-count-changed", fileCount);
     mainWindow?.webContents.send("recycle-pictures-filePath", filePath);
     si.system().then((data) => {
@@ -11637,10 +11775,11 @@ function createWindow() {
 }
 const checkInterval = () => {
   setInterval(() => {
+    checkRestFiles((value) => savePicture(value, db), db);
   }, INTERVAL_TIME);
 };
-fs$2.watch(filePath, () => {
-  const fileCount = getFileCount(filePath);
+fs$5.watch(targetDir, () => {
+  const fileCount = getFileCount(targetDir);
   mainWindow?.webContents.send("file-count-changed", fileCount);
 });
 usb.on("attach", (device) => {
@@ -11665,8 +11804,8 @@ electron.app.whenReady().then(() => {
   electron.ipcMain.on("create-pictures-dir", (_event, arg) => {
     try {
       const dir = `${homeDirectory}/recyclePictures/${arg}`;
-      if (!fs$2.existsSync(dir)) {
-        fs$2.mkdirSync(dir);
+      if (!fs$5.existsSync(dir)) {
+        fs$5.mkdirSync(dir);
       }
     } catch (err) {
       log.error(err, "err");
@@ -11677,8 +11816,14 @@ electron.app.whenReady().then(() => {
     event.reply("change-auto-response", arg);
   });
   electron.ipcMain.on("local-picture-save", (event, arg) => {
-    console.log("savePicture");
-    saveLocalPicture(arg, db, event);
+    moveFiles(
+      filePath,
+      targetDir,
+      () => {
+        saveLocalPicture(arg, db, event);
+      },
+      db
+    );
   });
   createWindow();
   electron.app.on("activate", function() {

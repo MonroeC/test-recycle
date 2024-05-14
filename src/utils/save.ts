@@ -1,6 +1,5 @@
 export default (params) => {
   const { filePath, saveSuccessCallback, saveErrorCallback } = params
-  console.log(params, 888)
   const current_count = 1
   const current_fileFormat = ESLFunctions?.FF_JPEG
 

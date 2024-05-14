@@ -5,7 +5,7 @@ import scan from '../../../../utils/scan'
 import ResultModal from '../ResultModal'
 import './index.css'
 
-const ConfirmRecycle = ({ filePath }, ref) => {
+const ConfirmRecycle = ({ filePath, networkStatus, epsonConnect }, ref) => {
   const [loading, setLoading] = useState(false)
   const [visible, setVisible] = useState(false)
   const [subTitle, setSubTitle] = useState('')
@@ -28,12 +28,18 @@ const ConfirmRecycle = ({ filePath }, ref) => {
         setSubTitle(msg ?? '扫描仪启动失败')
       }
     })
-    // scan({ filePath, successCallback })
   }
 
+  const disabled = networkStatus === 'offline' || !epsonConnect
   return (
     <>
-      <Button className="confirm-btn" onClick={handleRecycle} id="recycle-btn" loading={loading}>
+      <Button
+        className={disabled ? 'confirm-btn-disabled' : 'confirm-btn'}
+        disabled={disabled}
+        onClick={handleRecycle}
+        id="recycle-btn"
+        loading={loading}
+      >
         确认回收
       </Button>
       <ResultModal

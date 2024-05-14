@@ -1,6 +1,7 @@
-import { Button, Flex, message } from 'antd'
+import { Button, Flex, Space, message } from 'antd'
 import { CloseCircleFilled, CheckCircleFilled } from '@ant-design/icons'
 import ConfirmRecycle from '../ConfirmReccycle'
+import AutoConfirmRecycle from '../AutoConfirmRecycle'
 import ResultModal from '../ResultModal'
 import scanAndSaveButtonClick from '../../../../utils/scanAndSaveButtonClick'
 import close from '../../../../utils/close'
@@ -12,8 +13,7 @@ const Content = ({
   networkStatus,
   epsonConnect,
   filePath,
-  isAuto,
-  autoFun
+  isAuto
 }: {
   /**
    * 当前网络状态
@@ -47,7 +47,8 @@ const Content = ({
           }
         }
       } else {
-        autoFun()
+        console.log('save-callback')
+        close(() => {})
       }
     })
   }, [])
@@ -77,21 +78,36 @@ const Content = ({
         </Flex>
         <Flex vertical gap={20} align="center">
           <div className="tips">2、再点击确认回收</div>
-          {networkStatus === 'offline' || !epsonConnect || isAuto ? (
+          {/* {networkStatus === 'offline' || !epsonConnect || isAuto ? (
             <Button className="confirm-btn-disabled" disabled>
               确认回收
             </Button>
           ) : (
-            <ConfirmRecycle ref={confirmRef} filePath={filePath} />
-          )}
-          <Button
+            <Space>
+              <ConfirmRecycle ref={confirmRef} filePath={filePath} />
+              <AutoConfirmRecycle filePath={filePath} />
+            </Space>
+          )} */}
+          <Space>
+            {isAuto ? (
+              <AutoConfirmRecycle filePath={filePath} />
+            ) : (
+              <ConfirmRecycle
+                networkStatus={networkStatus}
+                epsonConnect={epsonConnect}
+                ref={confirmRef}
+                filePath={filePath}
+              />
+            )}
+          </Space>
+          {/* <Button
             type="default"
             onClick={() => {
               close({})
             }}
           >
             关闭扫描
-          </Button>
+          </Button> */}
         </Flex>
       </Flex>
       <ResultModal

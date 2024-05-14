@@ -9,12 +9,13 @@ import usb from 'usb'
 import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import pino from 'pino'
+import moveFiles from '../utils/moveFiles'
 import {
   createDir,
-  // savePicture,
+  savePicture,
   saveLocalPicture,
-  checkScannerStatus
-  // checkRestFiles
+  checkScannerStatus,
+  checkRestFiles
 } from '../utils/common'
 import getFileCount from '../utils/getFileCount'
 
@@ -23,14 +24,20 @@ const log = require('electron-log')
 // 获取用户目录
 const homeDirectory = os.homedir()
 /** 需要监听的文件路径 */
-const filePath = `${homeDirectory}/recyclePictures` // 文件路径
+// const filePath = `${homeDirectory}/recyclePictures` // 文件路径
+
+// 设置源文件夹和目标文件夹路径
+const filePath = join(homeDirectory, 'recycle-pictures-A')
+const targetDir = join(homeDirectory, 'recycle-pictures-B')
+
 /** 创建照片存储文件夹： 根目录下的recyclePictures */
 createDir(filePath)
+createDir(targetDir)
 /** 初始化数据库 */
 const adapter = new FileSync(`${homeDirectory}/db.json`) // 指定数据文件
 const db = low(adapter)
 db.defaults({ recycleInfos: [], isAuto: false }).write()
-// db.get('recycleInfos').remove().write()
+db.get('recycleInfos').remove().write()
 
 const SCANNER_VENDOR_ID = 1208
 const SCANNER_PRODUCT_ID = 359
@@ -60,9 +67,11 @@ function createWindow(): void {
     checkScannerStatus((value) => {
       mainWindow?.webContents.send('usb-change-device', value)
     })
+
     checkInterval()
     // 将文件个数发送给渲染进程
-    const fileCount = getFileCount(filePath)
+    const fileCount = getFileCount(targetDir)
+    console.log(fileCount, 'filecount')
     mainWindow?.webContents.send('file-count-changed', fileCount)
     /**
      * 将文件路径发送给渲染进程
@@ -98,16 +107,16 @@ function createWindow(): void {
 const checkInterval = () => {
   setInterval(() => {
     // TODO
-    // checkRestFiles((value) => savePicture(value, db, null), db)
+    checkRestFiles((value) => savePicture(value, db, null), db)
   }, INTERVAL_TIME)
 }
 
 /**
  * 监听未上传文件个数
  */
-fs.watch(filePath, () => {
+fs.watch(targetDir, () => {
   // 获取文件个数
-  const fileCount = getFileCount(filePath)
+  const fileCount = getFileCount(targetDir)
   // 将文件个数发送给渲染进程
   mainWindow?.webContents.send('file-count-changed', fileCount)
 })
@@ -176,9 +185,15 @@ app.whenReady().then(() => {
   })
 
   ipcMain.on('local-picture-save', (event, arg) => {
-    // savePicture(arg, db, event)
-    console.log('savePicture')
-    saveLocalPicture(arg, db, event)
+    // saveLocalPicture(arg, db, event)
+    moveFiles(
+      filePath,
+      targetDir,
+      () => {
+        saveLocalPicture(arg, db, event)
+      },
+      db
+    )
   })
 
   createWindow()
