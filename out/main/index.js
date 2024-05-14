@@ -2,7 +2,7 @@
 const electron = require("electron");
 const require$$1 = require("path");
 const utils = require("@electron-toolkit/utils");
-const fs$3 = require("fs");
+const fs$2 = require("fs");
 const os = require("os");
 const si = require("systeminformation");
 const usb = require("usb");
@@ -15,8 +15,7 @@ const require$$0$1 = require("stream");
 const require$$3 = require("http");
 const require$$4 = require("https");
 const require$$5 = require("url");
-const uuid = require("node-uuid");
-const moment = require("moment");
+require("moment");
 const icon = require$$1.join(__dirname, "../../resources/icon.png");
 var Stream$2 = require$$0$1.Stream;
 var util$2 = require$$1$1;
@@ -11223,11 +11222,11 @@ var populate$1 = function(dst, src) {
 };
 var CombinedStream = combined_stream;
 var util = require$$1$1;
-var path$2 = require$$1;
+var path$1 = require$$1;
 var http = require$$3;
 var https = require$$4;
 var parseUrl = require$$5.parse;
-var fs$2 = fs$3;
+var fs$1 = fs$2;
 var Stream = require$$0$1.Stream;
 var mime = mimeTypes;
 var asynckit = asynckit$1;
@@ -11291,7 +11290,7 @@ FormData.prototype._lengthRetriever = function(value, callback) {
     if (value.end != void 0 && value.end != Infinity && value.start != void 0) {
       callback(null, value.end + 1 - (value.start ? value.start : 0));
     } else {
-      fs$2.stat(value.path, function(err, stat) {
+      fs$1.stat(value.path, function(err, stat) {
         var fileSize;
         if (err) {
           callback(err);
@@ -11349,11 +11348,11 @@ FormData.prototype._multiPartHeader = function(field, value, options) {
 FormData.prototype._getContentDisposition = function(value, options) {
   var filename, contentDisposition;
   if (typeof options.filepath === "string") {
-    filename = path$2.normalize(options.filepath).replace(/\\/g, "/");
+    filename = path$1.normalize(options.filepath).replace(/\\/g, "/");
   } else if (options.filename || value.name || value.path) {
-    filename = path$2.basename(options.filename || value.name || value.path);
+    filename = path$1.basename(options.filename || value.name || value.path);
   } else if (value.readable && value.hasOwnProperty("httpVersion")) {
-    filename = path$2.basename(value.client._httpMessage.path || "");
+    filename = path$1.basename(value.client._httpMessage.path || "");
   }
   if (filename) {
     contentDisposition = 'filename="' + filename + '"';
@@ -11530,30 +11529,15 @@ FormData.prototype.toString = function() {
   return "[object FormData]";
 };
 require("fs");
-const fs$1 = require("fs");
-const path$1 = require("path");
-const getFiles = function(dir) {
-  const res = [];
-  function traverse(dir2) {
-    fs$1.readdirSync(dir2).forEach((file) => {
-      const pathname = path$1.join(dir2, file);
-      if (fs$1.statSync(pathname).isDirectory()) {
-        traverse(pathname);
-      } else {
-        res.push(pathname);
-      }
-    });
-  }
-  traverse(dir);
-  return res;
-};
+require("fs");
+require("path");
 const SCANNER_VENDOR_ID$1 = 1208;
 const SCANNER_PRODUCT_ID$1 = 359;
 const logger$1 = pino();
 os.homedir();
 const createDir = (filePath2) => {
-  if (!fs$3.existsSync(filePath2)) {
-    fs$3.mkdirSync(filePath2);
+  if (!fs$2.existsSync(filePath2)) {
+    fs$2.mkdirSync(filePath2);
     console.log("create dir success");
   } else {
     console.log("dir already exists");
@@ -11574,19 +11558,7 @@ const checkScannerStatus = (cb) => {
 };
 const saveLocalPicture = (arg, db2, event) => {
   try {
-    const files = getFiles(arg);
-    console.log(files, db2, uuid.v4());
-    const infos = [];
-    files?.forEach((one) => {
-      infos.push({
-        filePath: one,
-        createTime: moment().format("YYYY-MM-DD HH:mm:ss"),
-        parentPath: arg,
-        isUpload: 0,
-        id: uuid.v4()
-      });
-    });
-    db2.get("recycleInfos").push(...infos).write();
+    console.log("local-save-success");
     event?.reply("picture-save-response", "success");
   } catch (error) {
     logger$1.info(error);
@@ -11600,10 +11572,14 @@ const getFileCount = function(dir) {
   function traverse(dir2) {
     fs.readdirSync(dir2).forEach((file) => {
       const pathname = path.join(dir2, file);
-      if (fs.statSync(pathname).isDirectory()) {
-        traverse(pathname);
-      } else {
-        res.push(pathname);
+      try {
+        if (fs.statSync(pathname).isDirectory()) {
+          traverse(pathname);
+        } else {
+          res.push(pathname);
+        }
+      } catch (error) {
+        console.log(error, 999);
       }
     });
   }
@@ -11645,7 +11621,6 @@ function createWindow() {
     const fileCount = getFileCount(filePath);
     mainWindow?.webContents.send("file-count-changed", fileCount);
     mainWindow?.webContents.send("recycle-pictures-filePath", filePath);
-    mainWindow?.webContents.send("change-auto-response", db.get("isAuto").value());
     si.system().then((data) => {
       mainWindow?.webContents.send("system-info", data);
     });
@@ -11664,7 +11639,7 @@ const checkInterval = () => {
   setInterval(() => {
   }, INTERVAL_TIME);
 };
-fs$3.watch(filePath, () => {
+fs$2.watch(filePath, () => {
   const fileCount = getFileCount(filePath);
   mainWindow?.webContents.send("file-count-changed", fileCount);
 });
@@ -11690,8 +11665,8 @@ electron.app.whenReady().then(() => {
   electron.ipcMain.on("create-pictures-dir", (_event, arg) => {
     try {
       const dir = `${homeDirectory}/recyclePictures/${arg}`;
-      if (!fs$3.existsSync(dir)) {
-        fs$3.mkdirSync(dir);
+      if (!fs$2.existsSync(dir)) {
+        fs$2.mkdirSync(dir);
       }
     } catch (err) {
       log.error(err, "err");
@@ -11702,6 +11677,7 @@ electron.app.whenReady().then(() => {
     event.reply("change-auto-response", arg);
   });
   electron.ipcMain.on("local-picture-save", (event, arg) => {
+    console.log("savePicture");
     saveLocalPicture(arg, db, event);
   });
   createWindow();

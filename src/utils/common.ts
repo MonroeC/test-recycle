@@ -142,22 +142,23 @@ const savePicture = (arg, db) => {
 
 const saveLocalPicture = (arg, db, event) => {
   try {
-    const files = getFiles(arg)
-    const infos: any = []
-    files?.forEach((one) => {
-      infos.push({
-        filePath: one,
-        createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
-        parentPath: arg,
-        isUpload: 0,
-        id: uuid.v4()
-      })
-    })
+    // const files = getFiles(arg)
+    // const infos: any = []
+    // files?.forEach((one) => {
+    //   infos.push({
+    //     filePath: one,
+    //     createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //     parentPath: arg,
+    //     isUpload: 0,
+    //     id: uuid.v4()
+    //   })
+    // })
 
-    /** 保存文件成功后将数据写入本地数据库 */
-    db.get('recycleInfos')
-      .push(...infos)
-      .write()
+    // /** 保存文件成功后将数据写入本地数据库 */
+    // db.get('recycleInfos')
+    //   .push(...infos)
+    //   .write()
+    console.log('local-save-success')
     event?.reply('picture-save-response', 'success')
   } catch (error) {
     logger.info(error)

@@ -3,6 +3,8 @@ import { CloseCircleFilled, CheckCircleFilled } from '@ant-design/icons'
 import ConfirmRecycle from '../ConfirmReccycle'
 import ResultModal from '../ResultModal'
 import scanAndSaveButtonClick from '../../../../utils/scanAndSaveButtonClick'
+import close from '../../../../utils/close'
+import scan from '../../../../utils/scan'
 import './index.css'
 import { useEffect, useRef, useState } from 'react'
 
@@ -10,7 +12,8 @@ const Content = ({
   networkStatus,
   epsonConnect,
   filePath,
-  isAuto
+  isAuto,
+  autoFun
 }: {
   /**
    * 当前网络状态
@@ -22,39 +25,11 @@ const Content = ({
    * 自动回收状态
    */
   isAuto
+  autoFun: () => void
 }) => {
   const [saveVisible, setSaveVisible] = useState(false)
   const [status, setStatus] = useState('')
   const confirmRef = useRef<any>(null)
-
-  const autoFun = () => {
-    scanAndSaveButtonClick(
-      // @ts-ignore
-      ESLFunctions,
-      filePath,
-      (errCode, msg) => {
-        // @ts-ignore
-        if (window.isAuto) {
-          console.log(errCode, msg)
-          if (errCode !== 40008002) {
-            message.error(msg ?? '扫描仪启动失败')
-          }
-        }
-      },
-      () => {
-        if ((window as any).isAuto) {
-          autoFun()
-        }
-      }
-    )
-  }
-  useEffect(() => {
-    // ts-ignore
-    ;(window as any).isAuto = isAuto
-    if (isAuto && epsonConnect) {
-      autoFun()
-    }
-  }, [isAuto, epsonConnect])
 
   useEffect(() => {
     window.electron.ipcRenderer.on('picture-save-response', (_event, arg) => {
@@ -71,6 +46,8 @@ const Content = ({
             setStatus('error')
           }
         }
+      } else {
+        autoFun()
       }
     })
   }, [])
@@ -107,6 +84,14 @@ const Content = ({
           ) : (
             <ConfirmRecycle ref={confirmRef} filePath={filePath} />
           )}
+          <Button
+            type="default"
+            onClick={() => {
+              close({})
+            }}
+          >
+            关闭扫描
+          </Button>
         </Flex>
       </Flex>
       <ResultModal

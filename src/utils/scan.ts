@@ -1,5 +1,6 @@
 import save from './save'
 function scan(params) {
+  console.log(params, 666)
   /** 扫描对象 */
   const scanParams: any = {}
   /** 文档来源 */
@@ -29,18 +30,28 @@ function scan(params) {
   /** 选择双馈选项 */
   scanParams.optDoubleFeedDetect = ESLFunctions.DFD_NONE
   /** 空白页跳过  BPS_NONE 不跳过*/
-  scanParams.optBlankPageSkip = ESLFunctions.BPS_VERY_LOW
+  scanParams.optBlankPageSkip = ESLFunctions.BPS_NONE
+  /** 自动连续送纸 */
+  // scanParams.autoFeedingMode = ESLFunctions.AFM_ON
   /** 偏斜矫正 SC_EDGE 通过边缘矫正 */
   scanParams.skewCorrect = ESLFunctions.SC_EDGE
-  window.eslObj.Scan(scanParams, function (isSuccess, result) {
+  scanParams.isAuto = true
+  window?.eslObj?.Scan(scanParams, function (isSuccess, result) {
     if (isSuccess) {
       if (result.eventType == ESLFunctions.EVENT_SCANPAGE_COMPLETE) {
       }
       if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
-        console.log(params, 888)
         save(params)
       }
     } else {
+      params.saveErrorCallback(result.errorCode)
+    }
+    if (!window.isAuto && window.scanOpen) {
+      window.eslObj.Close((isSuccess) => {
+        if (isSuccess) {
+          window.scanOpen = false
+        }
+      })
     }
   })
 }

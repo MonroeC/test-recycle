@@ -1,6 +1,7 @@
 import { Button } from 'antd'
 import { useState, forwardRef, useImperativeHandle } from 'react'
 import scanAndSaveButtonClick from '../../../../utils/scanAndSaveButtonClick'
+import scan from '../../../../utils/scan'
 import ResultModal from '../ResultModal'
 import './index.css'
 
@@ -27,6 +28,7 @@ const ConfirmRecycle = ({ filePath }, ref) => {
         setSubTitle(msg ?? '扫描仪启动失败')
       }
     })
+    // scan({ filePath, successCallback })
   }
 
   return (

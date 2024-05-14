@@ -71,7 +71,7 @@ function createWindow(): void {
     /**
      * 是否自动回收
      */
-    mainWindow?.webContents.send('change-auto-response', db.get('isAuto').value())
+    // mainWindow?.webContents.send('change-auto-response', db.get('isAuto').value())
 
     /**
      * 获取系统信息
@@ -177,6 +177,7 @@ app.whenReady().then(() => {
 
   ipcMain.on('local-picture-save', (event, arg) => {
     // savePicture(arg, db, event)
+    console.log('savePicture')
     saveLocalPicture(arg, db, event)
   })
 
