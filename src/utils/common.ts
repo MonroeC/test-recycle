@@ -52,102 +52,99 @@ const checkScannerStatus = (cb) => {
 }
 
 const checkRestFiles = (cb, db) => {
-  fs.readdir(targetDir, { withFileTypes: true }, (err, files) => {
-    if (err) {
-      console.log('Error reading directory:', err)
-      return
-    }
-    // 过滤出所有的文件夹
-    const folders = files.filter((file) => file.isDirectory()).map((folder) => folder.name)
-    folders?.forEach((one) => {
-      /**
-       * 文件夹是否在上传进程中
-       */
-      const isNotUplaod = db
-        .get('recycleInfos')
-        .filter({ isUpload: 0, isDelete: false })
-        .value()?.length
-      if (isNotUplaod) {
-        if (getFiles(`${targetDir}/${one}`)?.length) {
-          cb && cb(`${targetDir}/${one}`)
-        }
+  try {
+    fs.readdir(targetDir, { withFileTypes: true }, (err, files) => {
+      if (err) {
+        console.log('Error reading directory:', err)
+        return
       }
+      // 过滤出所有的文件夹
+      const folders = files.filter((file) => file.isDirectory()).map((folder) => folder.name)
+      folders?.forEach((one) => {
+        /**
+         * 文件夹是否在上传进程中
+         */
+        const isNotUplaod = db
+          .get('recycleInfos')
+          .filter({ isUpload: 0, isDelete: false })
+          .value()?.length
+        if (isNotUplaod) {
+          if (getFiles(`${targetDir}/${one}`)?.length) {
+            cb && cb(`${targetDir}/${one}`)
+          }
+        }
+      })
+      console.log(folders)
     })
-    console.log(folders)
-  })
+  } catch (error) {}
 }
 
 const savePicture = (arg, db) => {
-  const files = getFiles(arg)
-  const data = new FormData()
-  files?.forEach((one) => {
-    data.append('files', fs.createReadStream(one))
-  })
+  try {
+    const files = getFiles(arg)
+    const data = new FormData()
+    files?.forEach((one) => {
+      data.append('files', fs.createReadStream(one))
+    })
 
-  data.append('deviceSn', 'LBCDJSB001')
-  /** 保存文件成功后将数据写入本地数据库 */
+    data.append('deviceSn', 'LBCDJSB001')
+    /** 保存文件成功后将数据写入本地数据库 */
 
-  const config = {
-    method: 'post',
-    maxBodyLength: Infinity,
-    url: 'https://zz-test05.pinming.org/material-client-management/api/common/terminalRecycle',
-    // url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
-    headers: {
-      'content-type': 'multipart/form-data'
-    },
-    data: data
-  }
-  files?.forEach((one) => {
-    console.log(one, '999')
-    db.get('recycleInfos')
-      .filter({ filePath: one })
-      .each((one) => {
-        one.isUpload = 1
-        one.uploadingTime = moment().format('YYYY-MM-DD HH:mm:ss')
+    const config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: 'https://zz-test05.pinming.org/material-client-management/api/common/terminalRecycle',
+      // url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
+      headers: {
+        'content-type': 'multipart/form-data'
+      },
+      data: data
+    }
+    files?.forEach((one) => {
+      db.get('recycleInfos')
+        .filter({ filePath: one })
+        .each((one) => {
+          one.isUpload = 1
+          one.uploadingTime = moment().format('YYYY-MM-DD HH:mm:ss')
+        })
+        .write()
+    })
+    axios
+      .request(config)
+      .then((response) => {
+        // logger.info(JSON.stringify(response.data))
+        if (response?.data?.success) {
+          /** 更改数据库数据 */
+          db.get('recycleInfos')
+            .filter({ parentPath: arg })
+            .each((one) => {
+              one.isUpload = 2
+              one.uploadedTime = moment().format('YYYY-MM-DD HH:mm:ss')
+              one.isDelete = true
+            })
+            .write()
+          /** 删除文件 */
+          removeFileDir(arg)
+        } else {
+          db.get('recycleInfos')
+            .filter({ parentPath: arg })
+            .each((one) => {
+              one.isUpload = 0
+              one.isDelete = false
+            })
+            .write()
+        }
       })
-      .write()
-  })
-  // db.get('recycleInfos')
-  //   .filter({ parentPath: arg })
-  //   .each((one) => {
-  //     one.isUpload = 1
-  //     one.uploadingTime = moment().format('YYYY-MM-DD HH:mm:ss')
-  //   })
-  //   .write()
-  axios
-    .request(config)
-    .then((response) => {
-      logger.info(JSON.stringify(response.data))
-      if (response.data?.success) {
-        /** 更改数据库数据 */
-        db.get('recycleInfos')
-          .filter({ parentPath: arg })
-          .each((one) => {
-            one.isUpload = 2
-            one.uploadedTime = moment().format('YYYY-MM-DD HH:mm:ss')
-            one.isDelete = true
-          })
-          .write()
-        /** 删除文件 */
-        removeFileDir(arg)
-      } else {
+      .catch((error) => {
+        logger.info(error)
         db.get('recycleInfos')
           .filter({ parentPath: arg })
           .each((one) => {
             one.isUpload = 0
           })
           .write()
-      }
-    })
-    .catch((error) => {
-      logger.info(error)
-      db.get('recycleInfos')
-        .filter({ parentPath: arg })
-        .each((one) => {
-          one.isUpload = 0
-        })
-        .write()
-    })
+      })
+  } catch (error) {}
 }
 
 const saveLocalPicture = (_arg, _db, event) => {

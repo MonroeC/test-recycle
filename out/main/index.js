@@ -11569,16 +11569,20 @@ FormData.prototype.toString = function() {
 const FormData$1 = /* @__PURE__ */ getDefaultExportFromCjs(form_data);
 const fs$2 = require("fs");
 const removeFileDir = (path2) => {
-  const files = fs$2.readdirSync(path2);
-  for (const item of files) {
-    const stats = fs$2.statSync(`${path2}/${item}`);
-    if (stats.isDirectory()) {
-      removeFileDir(`${path2}/${item}`);
-    } else {
-      fs$2.unlinkSync(`${path2}/${item}`);
+  try {
+    const files = fs$2.readdirSync(path2);
+    for (const item of files) {
+      const stats = fs$2.statSync(`${path2}/${item}`);
+      if (stats.isDirectory()) {
+        removeFileDir(`${path2}/${item}`);
+      } else {
+        fs$2.unlinkSync(`${path2}/${item}`);
+      }
     }
+    fs$2.rmdirSync(path2);
+  } catch (error) {
+    console.log(error, "remove-error");
   }
-  fs$2.rmdirSync(path2);
 };
 const fs$1 = require("fs");
 const path$1 = require("path");
@@ -11624,67 +11628,72 @@ const checkScannerStatus = (cb) => {
   }
 };
 const checkRestFiles = (cb, db2) => {
-  fs$5.readdir(targetDir$1, { withFileTypes: true }, (err, files) => {
-    if (err) {
-      console.log("Error reading directory:", err);
-      return;
-    }
-    const folders = files.filter((file) => file.isDirectory()).map((folder) => folder.name);
-    folders?.forEach((one) => {
-      const isNotUplaod = db2.get("recycleInfos").filter({ isUpload: 0, isDelete: false }).value()?.length;
-      if (isNotUplaod) {
-        if (getFiles(`${targetDir$1}/${one}`)?.length) {
-          cb && cb(`${targetDir$1}/${one}`);
-        }
+  try {
+    fs$5.readdir(targetDir$1, { withFileTypes: true }, (err, files) => {
+      if (err) {
+        console.log("Error reading directory:", err);
+        return;
       }
+      const folders = files.filter((file) => file.isDirectory()).map((folder) => folder.name);
+      folders?.forEach((one) => {
+        const isNotUplaod = db2.get("recycleInfos").filter({ isUpload: 0, isDelete: false }).value()?.length;
+        if (isNotUplaod) {
+          if (getFiles(`${targetDir$1}/${one}`)?.length) {
+            cb && cb(`${targetDir$1}/${one}`);
+          }
+        }
+      });
+      console.log(folders);
     });
-    console.log(folders);
-  });
+  } catch (error) {
+  }
 };
 const savePicture = (arg, db2) => {
-  const files = getFiles(arg);
-  const data = new FormData$1();
-  files?.forEach((one) => {
-    data.append("files", fs$5.createReadStream(one));
-  });
-  data.append("deviceSn", "LBCDJSB001");
-  const config = {
-    method: "post",
-    maxBodyLength: Infinity,
-    url: "https://zz-test05.pinming.org/material-client-management/api/common/terminalRecycle",
-    // url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
-    headers: {
-      "content-type": "multipart/form-data"
-    },
-    data
-  };
-  files?.forEach((one) => {
-    console.log(one, "999");
-    db2.get("recycleInfos").filter({ filePath: one }).each((one2) => {
-      one2.isUpload = 1;
-      one2.uploadingTime = moment().format("YYYY-MM-DD HH:mm:ss");
-    }).write();
-  });
-  axios.request(config).then((response) => {
-    logger$1.info(JSON.stringify(response.data));
-    if (response.data?.success) {
-      db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
-        one.isUpload = 2;
-        one.uploadedTime = moment().format("YYYY-MM-DD HH:mm:ss");
-        one.isDelete = true;
+  try {
+    const files = getFiles(arg);
+    const data = new FormData$1();
+    files?.forEach((one) => {
+      data.append("files", fs$5.createReadStream(one));
+    });
+    data.append("deviceSn", "LBCDJSB001");
+    const config = {
+      method: "post",
+      maxBodyLength: Infinity,
+      url: "https://zz-test05.pinming.org/material-client-management/api/common/terminalRecycle",
+      // url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
+      headers: {
+        "content-type": "multipart/form-data"
+      },
+      data
+    };
+    files?.forEach((one) => {
+      db2.get("recycleInfos").filter({ filePath: one }).each((one2) => {
+        one2.isUpload = 1;
+        one2.uploadingTime = moment().format("YYYY-MM-DD HH:mm:ss");
       }).write();
-      removeFileDir(arg);
-    } else {
+    });
+    axios.request(config).then((response) => {
+      if (response?.data?.success) {
+        db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
+          one.isUpload = 2;
+          one.uploadedTime = moment().format("YYYY-MM-DD HH:mm:ss");
+          one.isDelete = true;
+        }).write();
+        removeFileDir(arg);
+      } else {
+        db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
+          one.isUpload = 0;
+          one.isDelete = false;
+        }).write();
+      }
+    }).catch((error) => {
+      logger$1.info(error);
       db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
         one.isUpload = 0;
       }).write();
-    }
-  }).catch((error) => {
-    logger$1.info(error);
-    db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
-      one.isUpload = 0;
-    }).write();
-  });
+    });
+  } catch (error) {
+  }
 };
 const saveLocalPicture = (_arg, _db, event) => {
   try {
@@ -11728,7 +11737,7 @@ db.defaults({ recycleInfos: [], isAuto: false }).write();
 db.get("recycleInfos").remove().write();
 const SCANNER_VENDOR_ID = 1208;
 const SCANNER_PRODUCT_ID = 359;
-const INTERVAL_TIME = 1e4;
+const INTERVAL_TIME = 5e3;
 let mainWindow;
 function createWindow() {
   mainWindow = new electron.BrowserWindow({

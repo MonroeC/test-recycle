@@ -41,7 +41,7 @@ db.get('recycleInfos').remove().write()
 
 const SCANNER_VENDOR_ID = 1208
 const SCANNER_PRODUCT_ID = 359
-const INTERVAL_TIME = 10000
+const INTERVAL_TIME = 5000
 
 let mainWindow
 
@@ -106,7 +106,6 @@ function createWindow(): void {
 
 const checkInterval = () => {
   setInterval(() => {
-    // TODO
     checkRestFiles((value) => savePicture(value, db), db)
   }, INTERVAL_TIME)
 }
