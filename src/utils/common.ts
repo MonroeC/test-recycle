@@ -148,6 +148,7 @@ const savePicture = (arg, db) => {
 }
 
 const saveLocalPicture = (_arg, _db, event) => {
+  console.log(_arg, '_arg')
   try {
     // const files = getFiles(arg)
     // const infos: any = []

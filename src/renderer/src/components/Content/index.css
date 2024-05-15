@@ -1,6 +1,10 @@
+#root {
+  background-color: #00d6ff4d;
+  overflow: auto;
+}
 .content {
   padding-top: calc(50vh - 295px);
-  background: #00d6ff4d;
+  /* background: #00d6ff4d; */
   height: calc(100vh - 60px);
   .img-content {
     padding: 0 30px;
@@ -12,7 +16,7 @@
   }
   .tips-img {
     display: inline-block;
-    width: 200px;
+    width: calc(28vw - 16px);
   }
   .icon {
     font-size: 38px;

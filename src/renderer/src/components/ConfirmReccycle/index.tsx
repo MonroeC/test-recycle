@@ -33,10 +33,13 @@ const ConfirmRecycle = (
     // @ts-ignore
     scanAndSaveButtonClick(ESLFunctions, filePath, (errCode, msg) => {
       setLoading(false)
-      if (errCode !== 40008002) {
-        setVisible(true)
-        setSubTitle(msg ?? '扫描仪启动失败')
-      }
+      console.log(errCode, 'errrorCode')
+      setVisible(true)
+      setSubTitle(
+        errCode != 40008002
+          ? '请联系项目人员检查设备是否异常？或扫描仪是否卡纸或污损？'
+          : '未检测到扫描单据，请检查'
+      )
     })
   }
 

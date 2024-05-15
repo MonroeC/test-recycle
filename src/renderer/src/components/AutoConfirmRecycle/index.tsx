@@ -8,15 +8,18 @@ import './index.css'
 const AutoConfirmRecycle = ({
   filePath,
   setScanResultLoading,
-  scanResultLoading
+  scanResultLoading,
+  setIsAuto
 }: {
   filePath: string
   setScanResultLoading: (v: boolean) => void
   scanResultLoading: boolean
+  setIsAuto: (v: boolean) => void
 }) => {
   const [loading, setLoading] = useState(false)
+  const [autoErrCode, setAutoErrCode] = useState()
 
-  const saveSuccessCallback = () => {
+  const saveSuccessCallback = (result) => {
     window.errorCount = 0
     setScanResultLoading(true)
     window.electronApi.saveLocalPicture(filePath)
@@ -26,21 +29,29 @@ const AutoConfirmRecycle = ({
     autoFun()
   }
 
-  const scanErrorCallback = () => {
+  const scanErrorCallback = (errCode) => {
     window.errorCount = window.errorCount + 1
     if (window.errorCount > 10) {
       setLoading(false)
+      setAutoErrCode(errCode)
       window.errorCount = 0
       window.isAutoScanning = false
     }
     autoFun()
+  }
+
+  const [isExistPicture, setIsExistPicture] = useState(false)
+  const saveOneSuccessCallback = (result) => {
+    console.log(result, 'oneresult')
+    setIsExistPicture(true)
   }
   const autoFun = () => {
     scan({
       filePath,
       saveSuccessCallback,
       scanErrorCallback,
-      scanAllSuccessCallback
+      scanAllSuccessCallback,
+      saveOneSuccessCallback
     })
   }
 
@@ -86,7 +97,17 @@ const AutoConfirmRecycle = ({
       >
         扫描完成
       </Button>
-      <ScanResultLoading visible={scanResultLoading} onCancel={() => setScanResultLoading(false)} />
+      <ScanResultLoading
+        autoErrCode={autoErrCode}
+        visible={scanResultLoading}
+        isExistPicture={isExistPicture}
+        onCancel={() => {
+          window.isAuto = false
+          setIsAuto(false)
+          setScanResultLoading(false)
+          setIsExistPicture(false)
+        }}
+      />
     </Space>
   )
 }

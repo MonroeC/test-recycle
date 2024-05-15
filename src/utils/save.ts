@@ -1,5 +1,5 @@
 export default (params) => {
-  const { filePath, saveSuccessCallback, saveErrorCallback } = params
+  const { filePath, saveSuccessCallback, saveErrorCallback, saveOneSuccessCallback } = params
   const current_count = 1
   const current_fileFormat = ESLFunctions?.FF_JPEG
 
@@ -14,20 +14,12 @@ export default (params) => {
   window?.eslObj.Save(saveParam, function (isSuccess, result) {
     if (isSuccess == true) {
       if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
-        // callBack(true, result)
+        saveOneSuccessCallback(result)
       }
       if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
         const saveResult = result
         console.log(saveParam, saveSuccessCallback, 'saveparam')
         saveSuccessCallback && saveSuccessCallback(saveResult)
-        // callBack(true, saveResult)
-        // window?.eslObj.Close(function (isSuccess, result) {
-        //   if (isSuccess == true) {
-        //     callBack(true, saveResult)
-        //   } else {
-        //     callBack(false, result)
-        //   }
-        // })
       }
     } else {
       console.log(window.errorCount, 'window.errorCount')

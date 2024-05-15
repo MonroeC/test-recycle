@@ -11696,6 +11696,7 @@ const savePicture = (arg, db2) => {
   }
 };
 const saveLocalPicture = (_arg, _db, event) => {
+  console.log(_arg, "_arg");
   try {
     event?.reply("picture-save-response", "success");
   } catch (error) {

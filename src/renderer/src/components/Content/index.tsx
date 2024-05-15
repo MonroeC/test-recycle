@@ -31,16 +31,7 @@ const Content = ({
   const confirmRef = useRef<any>(null)
   const [scanResultLoading, setScanResultLoading] = useState(false)
 
-  const closeSuccessCallback = () => {
-    /**
-     * 连续扫描成功后2秒关闭弹窗
-     */
-    setTimeout(() => {
-      window.isAuto = false
-      setIsAuto(false)
-      setScanResultLoading(false)
-    }, 5000)
-  }
+  const closeSuccessCallback = () => {}
 
   useEffect(() => {
     window.electron.ipcRenderer.on('picture-save-response', (_event, arg) => {
@@ -58,7 +49,6 @@ const Content = ({
           }
         }
       } else {
-        console.log('save-callback')
         close({
           closeSuccessCallback
         })
@@ -79,20 +69,38 @@ const Content = ({
   return (
     <Flex vertical className="content">
       <Flex justify="center" align="center" vertical gap={50}>
-        <Flex vertical gap={20}>
+        <Flex vertical gap={20} style={{ width: '90%' }}>
           <div className="tips">1、{finallyTextMap.first}</div>
           <Flex className="img-content" justify="space-between">
-            <Flex vertical gap={12} style={{ width: 304 }} justify="center" align="center">
+            <Flex
+              vertical
+              gap={12}
+              style={{ width: 'calc(30%vw)' }}
+              justify="center"
+              align="center"
+            >
               <img alt="" className="tips-img" src="https://placehold.co/600x400" />
               <div>单据歪斜、折边、黏连</div>
               <CloseCircleFilled className="icon color-red" />
             </Flex>
-            <Flex vertical gap={12} style={{ width: 304 }} justify="center" align="center">
+            <Flex
+              vertical
+              gap={12}
+              style={{ width: 'calc(30%vw)' }}
+              justify="center"
+              align="center"
+            >
               <img alt="" className="tips-img" src="https://placehold.co/600x400" />
               <div>别针、图钉、露胶等</div>
               <CloseCircleFilled className="icon color-red" />
             </Flex>
-            <Flex vertical gap={12} style={{ width: 304 }} justify="center" align="center">
+            <Flex
+              vertical
+              gap={12}
+              style={{ width: 'calc(30%vw)' }}
+              justify="center"
+              align="center"
+            >
               <img alt="" className="tips-img" src="https://placehold.co/600x400" />
               <div>单据规正，无折边，无黏连、无硬物、黏胶</div>
               <CheckCircleFilled className="icon color-green" />
@@ -104,6 +112,7 @@ const Content = ({
           <Space>
             {isAuto ? (
               <AutoConfirmRecycle
+                setIsAuto={setIsAuto}
                 filePath={filePath}
                 setScanResultLoading={setScanResultLoading}
                 scanResultLoading={scanResultLoading}
