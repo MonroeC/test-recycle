@@ -12,7 +12,7 @@ export default ({ successCallBack, errorCallback }) => {
   /** 连接类型 */
   connectionParam.connectType = 1
   if (!window.scanOpen) {
-    window.eslObj.Open(connectionParam, function (isSuccess, result) {
+    window.eslObj.Open(connectionParam, function (isSuccess) {
       if (isSuccess == true) {
         window.scanOpen = true
         successCallBack()

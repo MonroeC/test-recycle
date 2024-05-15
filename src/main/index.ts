@@ -107,7 +107,7 @@ function createWindow(): void {
 const checkInterval = () => {
   setInterval(() => {
     // TODO
-    checkRestFiles((value) => savePicture(value, db, null), db)
+    checkRestFiles((value) => savePicture(value, db), db)
   }, INTERVAL_TIME)
 }
 

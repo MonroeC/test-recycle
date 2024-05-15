@@ -1,5 +1,7 @@
 export {}
+
 declare global {
+  let ESLFunctions: any
   interface Window {
     /**
      * 是否连续扫码

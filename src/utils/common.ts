@@ -4,12 +4,10 @@ import FormData from 'form-data'
 import os from 'os'
 import usb from 'usb'
 import { join } from 'path'
-import uuid from 'node-uuid'
 import pino from 'pino'
 import removeFileDir from '../utils/removeDir'
 import getFiles from '../utils/getFiles'
 import moment from 'moment'
-import moveFiles from './moveFiles'
 
 const SCANNER_VENDOR_ID = 1208
 const SCANNER_PRODUCT_ID = 359
@@ -18,7 +16,7 @@ const logger = pino()
 // 获取用户目录
 const homeDirectory = os.homedir()
 /** 需要监听的文件路径 */
-const filePath = join(homeDirectory, 'recycle-pictures-A')
+// const filePath = join(homeDirectory, 'recycle-pictures-A')
 const targetDir = join(homeDirectory, 'recycle-pictures-B')
 
 const createDir = (filePath) => {
@@ -152,7 +150,7 @@ const savePicture = (arg, db) => {
     })
 }
 
-const saveLocalPicture = (arg, db, event) => {
+const saveLocalPicture = (_arg, _db, event) => {
   try {
     // const files = getFiles(arg)
     // const infos: any = []

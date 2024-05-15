@@ -20,7 +20,7 @@ const ScanResultLoading = (props: IProps) => {
     }
   }, [visible])
 
-  const [countdown] = useCountDown({
+  useCountDown({
     targetDate,
     onEnd: () => {
       setLoading(false)

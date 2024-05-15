@@ -15,9 +15,8 @@ const ERR_MAP = {
   80020003: '无法打开扫描仪驱动程序',
   80030001: '扫描操作失败'
 }
-
 function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
-  const time = new Date().getTime()
+  // const time = new Date().getTime()
   const current_count = 1
   const current_fileFormat = ESLFunctions?.FF_JPEG
   /**

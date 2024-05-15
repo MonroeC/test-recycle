@@ -11601,7 +11601,6 @@ const SCANNER_VENDOR_ID$1 = 1208;
 const SCANNER_PRODUCT_ID$1 = 359;
 const logger$1 = pino();
 const homeDirectory$1 = os.homedir();
-require$$1.join(homeDirectory$1, "recycle-pictures-A");
 const targetDir$1 = require$$1.join(homeDirectory$1, "recycle-pictures-B");
 const createDir = (filePath2) => {
   if (!fs$5.existsSync(filePath2)) {
@@ -11687,7 +11686,7 @@ const savePicture = (arg, db2) => {
     }).write();
   });
 };
-const saveLocalPicture = (arg, db2, event) => {
+const saveLocalPicture = (_arg, _db, event) => {
   try {
     event?.reply("picture-save-response", "success");
   } catch (error) {

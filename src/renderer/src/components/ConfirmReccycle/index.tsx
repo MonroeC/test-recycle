@@ -11,7 +11,7 @@ const ConfirmRecycle = (
     epsonConnect
   }: {
     filePath: string
-    networkStatus: 'online' | 'offline'
+    networkStatus: string
     epsonConnect: boolean
   },
   ref
