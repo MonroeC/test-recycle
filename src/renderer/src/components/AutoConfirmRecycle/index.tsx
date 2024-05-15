@@ -1,19 +1,24 @@
 import { Button, Space } from 'antd'
-import { useState, forwardRef, useImperativeHandle, useEffect } from 'react'
-import scanClose from '../../../../utils/close'
+import { useState } from 'react'
 import scanOpen from '../../../../utils/scanOpen'
 import scan from '../../../../utils/scan'
-import { message } from 'antd'
-import ResultModal from '../ResultModal'
-import autoScanAndSaveButtonClick from '../../../../utils/autoScanAndSaveButtonClick'
+import ScanResultLoading from './ScanResultLoading'
 import './index.css'
 
-const AutoConfirmRecycle = ({ filePath }) => {
+const AutoConfirmRecycle = ({
+  filePath,
+  setScanResultLoading,
+  scanResultLoading
+}: {
+  filePath: string
+  setScanResultLoading: (v: boolean) => void
+  scanResultLoading: boolean
+}) => {
   const [loading, setLoading] = useState(false)
-  const [visible, setVisible] = useState(false)
 
   const saveSuccessCallback = () => {
     window.errorCount = 0
+    setScanResultLoading(true)
     window.electronApi.saveLocalPicture(filePath)
   }
 
@@ -21,7 +26,7 @@ const AutoConfirmRecycle = ({ filePath }) => {
     autoFun()
   }
 
-  const scanErrorCallback = (errCode) => {
+  const scanErrorCallback = () => {
     window.errorCount = window.errorCount + 1
     if (window.errorCount > 10) {
       setLoading(false)
@@ -64,7 +69,7 @@ const AutoConfirmRecycle = ({ filePath }) => {
   }
 
   return (
-    <Space>
+    <Space size={50}>
       <Button
         className={!loading ? 'confirm-btn' : 'confirm-btn-disabled'}
         onClick={handleScan}
@@ -79,9 +84,9 @@ const AutoConfirmRecycle = ({ filePath }) => {
         id="recycle-btn-disabled"
         onClick={handleStopScan}
       >
-        停止扫描
+        扫描完成
       </Button>
-      <ResultModal visible={visible} status="scanError" onCancel={() => setVisible(false)} />
+      <ScanResultLoading visible={scanResultLoading} onCancel={() => setScanResultLoading(false)} />
     </Space>
   )
 }

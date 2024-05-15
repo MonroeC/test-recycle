@@ -1,11 +1,9 @@
-import { Button, Flex, Space, message } from 'antd'
+import { Flex, Space, message } from 'antd'
 import { CloseCircleFilled, CheckCircleFilled } from '@ant-design/icons'
 import ConfirmRecycle from '../ConfirmReccycle'
 import AutoConfirmRecycle from '../AutoConfirmRecycle'
 import ResultModal from '../ResultModal'
-import scanAndSaveButtonClick from '../../../../utils/scanAndSaveButtonClick'
 import close from '../../../../utils/close'
-import scan from '../../../../utils/scan'
 import './index.css'
 import { useEffect, useRef, useState } from 'react'
 
@@ -13,7 +11,8 @@ const Content = ({
   networkStatus,
   epsonConnect,
   filePath,
-  isAuto
+  isAuto,
+  setIsAuto
 }: {
   /**
    * 当前网络状态
@@ -25,11 +24,23 @@ const Content = ({
    * 自动回收状态
    */
   isAuto
-  autoFun: () => void
+  setIsAuto
 }) => {
   const [saveVisible, setSaveVisible] = useState(false)
   const [status, setStatus] = useState('')
   const confirmRef = useRef<any>(null)
+  const [scanResultLoading, setScanResultLoading] = useState(false)
+
+  const closeSuccessCallback = () => {
+    /**
+     * 连续扫描成功后2秒关闭弹窗
+     */
+    setTimeout(() => {
+      window.isAuto = false
+      setIsAuto(false)
+      setScanResultLoading(false)
+    }, 5000)
+  }
 
   useEffect(() => {
     window.electron.ipcRenderer.on('picture-save-response', (_event, arg) => {
@@ -48,16 +59,28 @@ const Content = ({
         }
       } else {
         console.log('save-callback')
-        close(() => {})
+        close({
+          closeSuccessCallback
+        })
       }
     })
   }, [])
 
+  const AUTO_TEXT_MAP = {
+    first: '先将单据整理整齐、整洁、摆正，分批投入回收口',
+    second: '点击“开始扫描”，扫描完毕后，点击“扫描完成”'
+  }
+
+  const TEXT_MAP = {
+    first: '将单据分为单张、整洁、摆正投入回收口',
+    second: '再点击“确认回收”'
+  }
+  const finallyTextMap = isAuto ? AUTO_TEXT_MAP : TEXT_MAP
   return (
     <Flex vertical className="content">
       <Flex justify="center" align="center" vertical gap={50}>
         <Flex vertical gap={20}>
-          <div className="tips">1、将单据分为单张、整洁、摆正投入回收口</div>
+          <div className="tips">1、{finallyTextMap.first}</div>
           <Flex className="img-content" justify="space-between">
             <Flex vertical gap={12} style={{ width: 304 }} justify="center" align="center">
               <img alt="" className="tips-img" src="https://placehold.co/600x400" />
@@ -77,20 +100,14 @@ const Content = ({
           </Flex>
         </Flex>
         <Flex vertical gap={20} align="center">
-          <div className="tips">2、再点击确认回收</div>
-          {/* {networkStatus === 'offline' || !epsonConnect || isAuto ? (
-            <Button className="confirm-btn-disabled" disabled>
-              确认回收
-            </Button>
-          ) : (
-            <Space>
-              <ConfirmRecycle ref={confirmRef} filePath={filePath} />
-              <AutoConfirmRecycle filePath={filePath} />
-            </Space>
-          )} */}
+          <div className="tips">2、{finallyTextMap.second}</div>
           <Space>
             {isAuto ? (
-              <AutoConfirmRecycle filePath={filePath} />
+              <AutoConfirmRecycle
+                filePath={filePath}
+                setScanResultLoading={setScanResultLoading}
+                scanResultLoading={scanResultLoading}
+              />
             ) : (
               <ConfirmRecycle
                 networkStatus={networkStatus}
@@ -100,14 +117,6 @@ const Content = ({
               />
             )}
           </Space>
-          {/* <Button
-            type="default"
-            onClick={() => {
-              close({})
-            }}
-          >
-            关闭扫描
-          </Button> */}
         </Flex>
       </Flex>
       <ResultModal

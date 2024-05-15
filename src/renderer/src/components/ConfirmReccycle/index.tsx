@@ -1,11 +1,21 @@
 import { Button } from 'antd'
 import { useState, forwardRef, useImperativeHandle } from 'react'
 import scanAndSaveButtonClick from '../../../../utils/scanAndSaveButtonClick'
-import scan from '../../../../utils/scan'
 import ResultModal from '../ResultModal'
 import './index.css'
 
-const ConfirmRecycle = ({ filePath, networkStatus, epsonConnect }, ref) => {
+const ConfirmRecycle = (
+  {
+    filePath,
+    networkStatus,
+    epsonConnect
+  }: {
+    filePath: string
+    networkStatus: 'online' | 'offline'
+    epsonConnect: boolean
+  },
+  ref
+) => {
   const [loading, setLoading] = useState(false)
   const [visible, setVisible] = useState(false)
   const [subTitle, setSubTitle] = useState('')

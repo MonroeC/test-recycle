@@ -65,7 +65,10 @@ const checkRestFiles = (cb, db) => {
       /**
        * 文件夹是否在上传进程中
        */
-      const isNotUplaod = db.get('recycleInfos').filter({ isUpload: 0 }).value()?.length
+      const isNotUplaod = db
+        .get('recycleInfos')
+        .filter({ isUpload: 0, isDelete: false })
+        .value()?.length
       if (isNotUplaod) {
         if (getFiles(`${targetDir}/${one}`)?.length) {
           cb && cb(`${targetDir}/${one}`)
@@ -77,7 +80,6 @@ const checkRestFiles = (cb, db) => {
 }
 
 const savePicture = (arg, db) => {
-  console.log(arg, 88)
   const files = getFiles(arg)
   const data = new FormData()
   files?.forEach((one) => {
@@ -97,19 +99,23 @@ const savePicture = (arg, db) => {
     },
     data: data
   }
-  console.log(
-    db.get('recycleInfos').value(),
-    db.get('recycleInfos').filter({ parentPath: arg }).value(),
-    9090
-  )
-  db.get('recycleInfos')
-    .filter({ parentPath: arg })
-    .each((one) => {
-      console.log(33)
-      one.isUpload = 1
-      one.uploadingTime = moment().format('YYYY-MM-DD HH:mm:ss')
-    })
-    .write()
+  files?.forEach((one) => {
+    console.log(one, '999')
+    db.get('recycleInfos')
+      .filter({ filePath: one })
+      .each((one) => {
+        one.isUpload = 1
+        one.uploadingTime = moment().format('YYYY-MM-DD HH:mm:ss')
+      })
+      .write()
+  })
+  // db.get('recycleInfos')
+  //   .filter({ parentPath: arg })
+  //   .each((one) => {
+  //     one.isUpload = 1
+  //     one.uploadingTime = moment().format('YYYY-MM-DD HH:mm:ss')
+  //   })
+  //   .write()
   axios
     .request(config)
     .then((response) => {
@@ -121,6 +127,7 @@ const savePicture = (arg, db) => {
           .each((one) => {
             one.isUpload = 2
             one.uploadedTime = moment().format('YYYY-MM-DD HH:mm:ss')
+            one.isDelete = true
           })
           .write()
         /** 删除文件 */
@@ -163,7 +170,6 @@ const saveLocalPicture = (arg, db, event) => {
     // db.get('recycleInfos')
     //   .push(...infos)
     //   .write()
-    console.log('local-save-success')
     event?.reply('picture-save-response', 'success')
   } catch (error) {
     logger.info(error)

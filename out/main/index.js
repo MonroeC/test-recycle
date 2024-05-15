@@ -27,7 +27,6 @@ const moveFiles = (sourceDir, targetDir2, callBack, db2) => {
     }
     const files = fs$4.readdirSync(sourceDir);
     const images = files.filter((file) => path$3.extname(file).toLowerCase() === ".jpg");
-    console.log(images, "images");
     for (let i = 0; i < images.length; i += 2) {
       const uuidTemp = uuid.v4();
       const groupFolder = path$3.join(targetDir2, uuidTemp);
@@ -39,7 +38,8 @@ const moveFiles = (sourceDir, targetDir2, callBack, db2) => {
           db2.get("recycleInfos").push({
             isUpload: 0,
             filePath: targetFile,
-            parentPath: `${targetDir2}/${uuidTemp}`
+            parentPath: `${targetDir2}/${uuidTemp}`,
+            isDelete: false
           }).write();
           fs$4.renameSync(sourceFile, targetFile);
           console.log("remove");
@@ -11632,7 +11632,7 @@ const checkRestFiles = (cb, db2) => {
     }
     const folders = files.filter((file) => file.isDirectory()).map((folder) => folder.name);
     folders?.forEach((one) => {
-      const isNotUplaod = db2.get("recycleInfos").filter({ isUpload: 0 }).value()?.length;
+      const isNotUplaod = db2.get("recycleInfos").filter({ isUpload: 0, isDelete: false }).value()?.length;
       if (isNotUplaod) {
         if (getFiles(`${targetDir$1}/${one}`)?.length) {
           cb && cb(`${targetDir$1}/${one}`);
@@ -11643,7 +11643,6 @@ const checkRestFiles = (cb, db2) => {
   });
 };
 const savePicture = (arg, db2) => {
-  console.log(arg, 88);
   const files = getFiles(arg);
   const data = new FormData$1();
   files?.forEach((one) => {
@@ -11660,22 +11659,20 @@ const savePicture = (arg, db2) => {
     },
     data
   };
-  console.log(
-    db2.get("recycleInfos").value(),
-    db2.get("recycleInfos").filter({ parentPath: arg }).value(),
-    9090
-  );
-  db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
-    console.log(33);
-    one.isUpload = 1;
-    one.uploadingTime = moment().format("YYYY-MM-DD HH:mm:ss");
-  }).write();
+  files?.forEach((one) => {
+    console.log(one, "999");
+    db2.get("recycleInfos").filter({ filePath: one }).each((one2) => {
+      one2.isUpload = 1;
+      one2.uploadingTime = moment().format("YYYY-MM-DD HH:mm:ss");
+    }).write();
+  });
   axios.request(config).then((response) => {
     logger$1.info(JSON.stringify(response.data));
     if (response.data?.success) {
       db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
         one.isUpload = 2;
         one.uploadedTime = moment().format("YYYY-MM-DD HH:mm:ss");
+        one.isDelete = true;
       }).write();
       removeFileDir(arg);
     } else {
@@ -11692,7 +11689,6 @@ const savePicture = (arg, db2) => {
 };
 const saveLocalPicture = (arg, db2, event) => {
   try {
-    console.log("local-save-success");
     event?.reply("picture-save-response", "success");
   } catch (error) {
     logger$1.info(error);

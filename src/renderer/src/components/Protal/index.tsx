@@ -3,9 +3,6 @@ import Content from '../Content'
 import { useState, useEffect } from 'react'
 import useFilePath from '@renderer/hooks/useFilePath'
 import scanClose from '../../../../utils/close'
-import scanOpen from '../../../../utils/scanOpen'
-import scan from '../../../../utils/scan'
-import { message } from 'antd'
 const Portal = () => {
   /**
    * 网络链接状态
@@ -19,7 +16,6 @@ const Portal = () => {
   /**
    * 图片存储文件夹目录
    */
-  // const [filePath, setFilePath] = useState()
   const { filePath } = useFilePath()
 
   const [isAuto, setIsAuto] = useState(false)
@@ -39,14 +35,6 @@ const Portal = () => {
   window.addEventListener('online', alertOnlineStatus)
   window.addEventListener('offline', alertOnlineStatus)
 
-  /**
-   * 新增加在window上的变量
-   * window.scanOpen 扫描进程是否开启
-   * window.isAuto 是否是自动模式
-   * window.errorCount 错误次数
-   * window.isAutoScanning 是否正在自动扫描中
-   */
-
   useEffect(() => {
     window.isAuto = isAuto
     window.electronApi.changeAuto(isAuto)
@@ -59,7 +47,6 @@ const Portal = () => {
   useEffect(() => {
     return () => {
       // 卸 载的时候关闭扫描进程
-      // 'http://localhost:51000'
       scanClose(() => {})
     }
   }, [])
@@ -71,6 +58,7 @@ const Portal = () => {
         epsonConnect={epsonConnect}
         filePath={filePath}
         isAuto={isAuto}
+        setIsAuto={setIsAuto}
       />
     </>
   )

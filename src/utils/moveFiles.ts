@@ -11,7 +11,6 @@ const moveFiles = (sourceDir, targetDir, callBack, db) => {
 
     // 过滤出图片文件，这里假设是jpeg格式，可根据需要调整
     const images = files.filter((file) => path.extname(file).toLowerCase() === '.jpg')
-    console.log(images, 'images')
     // 每两个文件一组进行处理
 
     for (let i = 0; i < images.length; i += 2) {
@@ -28,7 +27,8 @@ const moveFiles = (sourceDir, targetDir, callBack, db) => {
             .push({
               isUpload: 0,
               filePath: targetFile,
-              parentPath: `${targetDir}/${uuidTemp}`
+              parentPath: `${targetDir}/${uuidTemp}`,
+              isDelete: false
             })
             .write()
           fs.renameSync(sourceFile, targetFile)
