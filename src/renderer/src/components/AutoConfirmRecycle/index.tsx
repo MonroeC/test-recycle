@@ -19,7 +19,7 @@ const AutoConfirmRecycle = ({
   const [loading, setLoading] = useState(false)
   const [autoErrCode, setAutoErrCode] = useState()
 
-  const saveSuccessCallback = (result) => {
+  const saveSuccessCallback = () => {
     window.errorCount = 0
     setScanResultLoading(true)
     window.electronApi.saveLocalPicture(filePath)

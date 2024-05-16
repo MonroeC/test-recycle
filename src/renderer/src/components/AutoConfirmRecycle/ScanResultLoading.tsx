@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Flex, Modal, Result, Spin } from 'antd'
+import { Modal, Result, Spin } from 'antd'
 import { useCountDown } from 'ahooks'
 
 const ERR_MAP = {
@@ -31,7 +31,7 @@ const ScanResultLoading = (props: IProps) => {
   const [targetDate, setTargetDate] = useState<number>()
   const [targetDate1, setTargetDate1] = useState<number>()
   const [targetDate2, setTargetDate2] = useState<number>()
-  const [status, setStatus] = useState()
+  const [status, setStatus] = useState<any>()
 
   useEffect(() => {
     if (visible) {
