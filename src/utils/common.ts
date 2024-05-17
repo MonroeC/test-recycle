@@ -2,6 +2,7 @@ import fs from 'fs'
 import axios from 'axios'
 import FormData from 'form-data'
 import os from 'os'
+import si from 'systeminformation'
 import usb from 'usb'
 import { join } from 'path'
 import pino from 'pino'
@@ -86,8 +87,9 @@ const savePicture = (arg, db) => {
     files?.forEach((one) => {
       data.append('files', fs.createReadStream(one))
     })
+    const systemInfo = si.system()
 
-    data.append('deviceSn', 'LBCDJSB001')
+    data.append('deviceSn', systemInfo?.uuid)
     /** 保存文件成功后将数据写入本地数据库 */
 
     const config = {
@@ -112,7 +114,7 @@ const savePicture = (arg, db) => {
     axios
       .request(config)
       .then((response) => {
-        // logger.info(JSON.stringify(response.data))
+        logger.info(JSON.stringify(response.data))
         if (response?.data?.success) {
           /** 更改数据库数据 */
           db.get('recycleInfos')

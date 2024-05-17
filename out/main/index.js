@@ -135,7 +135,8 @@ const savePicture = (arg, db2) => {
     files?.forEach((one) => {
       data.append("files", fs$4.createReadStream(one));
     });
-    data.append("deviceSn", "LBCDJSB001");
+    const systemInfo = si.system();
+    data.append("deviceSn", systemInfo?.uuid);
     const config = {
       method: "post",
       maxBodyLength: Infinity,
@@ -153,6 +154,7 @@ const savePicture = (arg, db2) => {
       }).write();
     });
     axios.request(config).then((response) => {
+      logger$1.info(JSON.stringify(response.data));
       if (response?.data?.success) {
         db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
           one.isUpload = 2;
