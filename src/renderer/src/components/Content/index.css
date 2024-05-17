@@ -3,7 +3,7 @@
   overflow: auto;
 }
 .content {
-  padding-top: calc(50vh - 295px);
+  padding-top: 150px;
   /* background: #00d6ff4d; */
   height: calc(100vh - 60px);
   .img-content {
