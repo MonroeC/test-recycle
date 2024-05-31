@@ -17,6 +17,7 @@
   .tips-img {
     display: inline-block;
     width: calc(28vw - 16px);
+    height: calc(18.67vw)
   }
   .icon {
     font-size: 38px;

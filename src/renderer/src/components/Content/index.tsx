@@ -1,11 +1,16 @@
 import { Flex, Space, message } from 'antd'
+import { useEffect, useRef, useState } from 'react'
 import { CloseCircleFilled, CheckCircleFilled } from '@ant-design/icons'
 import ConfirmRecycle from '../ConfirmReccycle'
 import AutoConfirmRecycle from '../AutoConfirmRecycle'
 import ResultModal from '../ResultModal'
 import close from '../../../../utils/close'
+import pic1 from '../../../../../resources/images/pic1.png'
+import pic2 from '../../../../../resources/images/pic2.png'
+import pic3 from '../../../../../resources/images/pic3.png'
+
+
 import './index.css'
-import { useEffect, useRef, useState } from 'react'
 
 const Content = ({
   networkStatus,
@@ -79,7 +84,7 @@ const Content = ({
               justify="center"
               align="center"
             >
-              <img alt="" className="tips-img" src="https://placehold.co/600x400" />
+              <img alt="" className="tips-img" src={pic1} />
               <div>单据歪斜、折边、黏连</div>
               <CloseCircleFilled className="icon color-red" />
             </Flex>
@@ -90,7 +95,7 @@ const Content = ({
               justify="center"
               align="center"
             >
-              <img alt="" className="tips-img" src="https://placehold.co/600x400" />
+              <img alt="" className="tips-img" src={pic2} />
               <div>别针、图钉、露胶等</div>
               <CloseCircleFilled className="icon color-red" />
             </Flex>
@@ -101,7 +106,7 @@ const Content = ({
               justify="center"
               align="center"
             >
-              <img alt="" className="tips-img" src="https://placehold.co/600x400" />
+              <img alt="" className="tips-img" src={pic3} />
               <div>单据规正，无折边，无黏连、无硬物、黏胶</div>
               <CheckCircleFilled className="icon color-green" />
             </Flex>

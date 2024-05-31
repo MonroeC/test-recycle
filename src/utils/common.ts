@@ -80,14 +80,14 @@ const checkRestFiles = (cb, db) => {
   } catch (error) {}
 }
 
-const savePicture = (arg, db) => {
+const savePicture = async (arg, db) => {
   try {
     const files = getFiles(arg)
     const data = new FormData()
     files?.forEach((one) => {
       data.append('files', fs.createReadStream(one))
     })
-    const systemInfo = si.system()
+    const systemInfo = await si.system()
 
     data.append('deviceSn', systemInfo?.uuid)
     /** 保存文件成功后将数据写入本地数据库 */

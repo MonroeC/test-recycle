@@ -2,6 +2,13 @@
   height: 60px;
   background-color: #41a3f0;
   padding: 0 16px;
+  .logo-img {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    position: relative;
+    top: 2px
+  }
   .title {
     font-size: 22px;
     color: #fff;
@@ -10,11 +17,37 @@
   .header-space {
     text-align: center;
   }
-
-  .header-space-img {
-    font-size: 24px;
+  .des-title {
+    position: relative;
+    top: -6px;
   }
-
+  .des-title-upload {
+    position: relative;
+    top: -3px;
+  }
+  .auto-icon {
+    position: relative;
+    top: 3px;
+    width: 36px !important;
+    height: 34px !important;
+  }
+  .upload-icon {
+    width: 28px !important;
+    height: 22px !important;
+    position: relative;
+    top: 2px;
+  }
+  .header-space-img {
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+    margin-top: 6px;
+  }
+  .upload-wife{
+    height: 28px;
+    position: relative;
+    top: 2px
+  }
   .color-gray {
     color: #efefef;
   }

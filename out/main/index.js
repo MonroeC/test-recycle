@@ -128,14 +128,14 @@ const checkRestFiles = (cb, db2) => {
   } catch (error) {
   }
 };
-const savePicture = (arg, db2) => {
+const savePicture = async (arg, db2) => {
   try {
     const files = getFiles(arg);
     const data = new FormData();
     files?.forEach((one) => {
       data.append("files", fs$4.createReadStream(one));
     });
-    const systemInfo = si.system();
+    const systemInfo = await si.system();
     data.append("deviceSn", systemInfo?.uuid);
     const config = {
       method: "post",
@@ -235,7 +235,6 @@ function createWindow() {
     },
     fullscreen: true
   });
-  mainWindow.webContents.openDevTools();
   mainWindow.on("ready-to-show", () => {
     mainWindow.show();
     checkScannerStatus((value) => {
