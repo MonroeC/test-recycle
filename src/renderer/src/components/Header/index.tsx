@@ -1,9 +1,8 @@
 import { Flex, Space } from 'antd'
 import { useEffect, useState } from 'react'
-import { WifiOutlined, CloudUploadOutlined, ScanOutlined } from '@ant-design/icons'
 import SettingModal from '../SettingModal'
 import logo from '../../../../../resources/logo.png'
-import icOffline from '../../../../../resources/images/ic_online.png'
+import icOffline from '../../../../../resources/images/ic_offline.png'
 import icOnline from '../../../../../resources/images/ic_online.png';
 import syncAuto from '../../../../../resources/images/syncAuto.png';
 import syncAutoBlack from '../../../../../resources/images/syncAuto-black.png';
