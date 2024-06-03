@@ -95,7 +95,7 @@ const savePicture = async (arg, db) => {
     const config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://zz-test05.pinming.org/material-client-management/api/common/terminalRecycle',
+      url: 'https://weighmaster.pinming.cn/material-client-management/api/common/terminalRecycle',
       // url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
       headers: {
         'content-type': 'multipart/form-data'
