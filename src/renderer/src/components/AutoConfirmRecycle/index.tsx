@@ -18,10 +18,12 @@ const AutoConfirmRecycle = ({
 }) => {
   const [loading, setLoading] = useState(false)
   const [autoErrCode, setAutoErrCode] = useState()
+  const [flag, setFlag] = useState(false)
 
   const saveSuccessCallback = () => {
     window.errorCount = 0
     setScanResultLoading(true)
+    setFlag(false)
     window.electronApi.saveLocalPicture(filePath)
   }
 
@@ -76,15 +78,17 @@ const AutoConfirmRecycle = ({
    */
   const handleStopScan = () => {
     setLoading(false)
+    if (window.isAutoScanning) {
+      setFlag(true)
+    }
     window.isAutoScanning = false
   }
-
   return (
     <Space size={50}>
       <Button
-        className={!loading ? 'confirm-btn' : 'confirm-btn-disabled'}
+        className={!loading && !flag ? 'confirm-btn' : 'confirm-btn-disabled'}
         onClick={handleScan}
-        disabled={loading}
+        disabled={loading || flag}
         id="recycle-btn"
       >
         开始扫描

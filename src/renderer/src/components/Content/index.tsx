@@ -13,16 +13,11 @@ import pic3 from '../../../../../resources/images/pic3.png'
 import './index.css'
 
 const Content = ({
-  networkStatus,
   epsonConnect,
   filePath,
   isAuto,
   setIsAuto
 }: {
-  /**
-   * 当前网络状态
-   */
-  networkStatus: string
   epsonConnect: boolean
   filePath: string
   /**
@@ -124,7 +119,6 @@ const Content = ({
               />
             ) : (
               <ConfirmRecycle
-                networkStatus={networkStatus}
                 epsonConnect={epsonConnect}
                 ref={confirmRef}
                 filePath={filePath}

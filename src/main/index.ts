@@ -36,8 +36,8 @@ createDir(targetDir)
 /** 初始化数据库 */
 const adapter = new FileSync(`${homeDirectory}/db.json`) // 指定数据文件
 const db = low(adapter)
-db.defaults({ recycleInfos: [], isAuto: false }).write()
-db.get('recycleInfos').remove().write()
+db.defaults({ recycleInfos: [], isAuto: false, systemInfo: {} }).write()
+// db.unset('systemInfo').write()
 
 const SCANNER_VENDOR_ID = 1208
 const SCANNER_PRODUCT_ID = 359
@@ -71,7 +71,6 @@ function createWindow(): void {
     checkInterval()
     // 将文件个数发送给渲染进程
     const fileCount = getFileCount(targetDir)
-    console.log(fileCount, 'filecount')
     mainWindow?.webContents.send('file-count-changed', fileCount)
     /**
      * 将文件路径发送给渲染进程
@@ -87,6 +86,8 @@ function createWindow(): void {
      */
     si.system().then((data) => {
       mainWindow?.webContents.send('system-info', data)
+      console.log(data, 'data')
+      db.update('systemInfo', () => data).write()
     })
   })
 
@@ -124,18 +125,15 @@ fs.watch(targetDir, () => {
  * 监听usbs设备插拔
  */
 usb.on('attach', (device) => {
-  console.log('attached:')
   if (
     device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
     device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
   ) {
-    console.log('Scanner attached:')
     mainWindow?.webContents.send('usb-change-device', true)
   }
 })
 
 usb.on('detach', (device) => {
-  console.log('detach:')
   if (
     device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
     device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID

@@ -7,11 +7,9 @@ import './index.css'
 const ConfirmRecycle = (
   {
     filePath,
-    networkStatus,
     epsonConnect
   }: {
     filePath: string
-    networkStatus: string
     epsonConnect: boolean
   },
   ref
@@ -43,7 +41,7 @@ const ConfirmRecycle = (
     })
   }
 
-  const disabled = networkStatus === 'offline' || !epsonConnect
+  const disabled = !epsonConnect
   return (
     <>
       <Button

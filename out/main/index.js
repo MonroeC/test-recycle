@@ -34,11 +34,11 @@ const moveFiles = (sourceDir, targetDir2, callBack, db2) => {
           db2.get("recycleInfos").push({
             isUpload: 0,
             filePath: targetFile,
-            parentPath: `${targetDir2}/${uuidTemp}`,
+            parentPath: groupFolder,
+            // parentPath: `${targetDir}/${uuidTemp}`,
             isDelete: false
           }).write();
           fs$3.renameSync(sourceFile, targetFile);
-          console.log("remove");
         }
       }
     }
@@ -100,10 +100,8 @@ const checkScannerStatus = (cb) => {
     (device) => device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID$1 && device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID$1
   );
   if (scannerConnected) {
-    console.log("Scanner is connected.");
     cb && cb(true);
   } else {
-    console.log("Scanner is not connected.");
     cb && cb(false);
   }
 };
@@ -118,12 +116,12 @@ const checkRestFiles = (cb, db2) => {
       folders?.forEach((one) => {
         const isNotUplaod = db2.get("recycleInfos").filter({ isUpload: 0, isDelete: false }).value()?.length;
         if (isNotUplaod) {
-          if (getFiles(`${targetDir$1}/${one}`)?.length) {
-            cb && cb(`${targetDir$1}/${one}`);
+          const pathname = path$3.join(targetDir$1, one);
+          if (getFiles(pathname)?.length) {
+            cb && cb(pathname);
           }
         }
       });
-      console.log(folders);
     });
   } catch (error) {
   }
@@ -135,7 +133,7 @@ const savePicture = async (arg, db2) => {
     files?.forEach((one) => {
       data.append("files", fs$4.createReadStream(one));
     });
-    const systemInfo = await si.system();
+    const systemInfo = db2.get("systemInfo").value();
     data.append("deviceSn", systemInfo?.uuid);
     const config = {
       method: "post",
@@ -154,8 +152,7 @@ const savePicture = async (arg, db2) => {
       }).write();
     });
     axios.request(config).then((response) => {
-      logger$1.info(JSON.stringify(response.data));
-      if (response?.data?.success) {
+      if (response && response.data && response.data.success) {
         db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
           one.isUpload = 2;
           one.uploadedTime = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -166,19 +163,20 @@ const savePicture = async (arg, db2) => {
         db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
           one.isUpload = 0;
           one.isDelete = false;
+          one.arg = arg;
+          one.status = "error";
         }).write();
       }
-    }).catch((error) => {
-      logger$1.info(error);
+    }).catch(() => {
       db2.get("recycleInfos").filter({ parentPath: arg }).each((one) => {
         one.isUpload = 0;
+        one.status = "catch";
       }).write();
     });
   } catch (error) {
   }
 };
 const saveLocalPicture = (_arg, _db, event) => {
-  console.log(_arg, "_arg");
   try {
     event?.reply("picture-save-response", "success");
   } catch (error) {
@@ -216,8 +214,7 @@ createDir(filePath);
 createDir(targetDir);
 const adapter = new FileSync(`${homeDirectory}/db.json`);
 const db = low(adapter);
-db.defaults({ recycleInfos: [], isAuto: false }).write();
-db.get("recycleInfos").remove().write();
+db.defaults({ recycleInfos: [], isAuto: false, systemInfo: {} }).write();
 const SCANNER_VENDOR_ID = 1208;
 const SCANNER_PRODUCT_ID = 359;
 const INTERVAL_TIME = 5e3;
@@ -242,11 +239,12 @@ function createWindow() {
     });
     checkInterval();
     const fileCount = getFileCount(targetDir);
-    console.log(fileCount, "filecount");
     mainWindow?.webContents.send("file-count-changed", fileCount);
     mainWindow?.webContents.send("recycle-pictures-filePath", filePath);
     si.system().then((data) => {
       mainWindow?.webContents.send("system-info", data);
+      console.log(data, "data");
+      db.update("systemInfo", () => data).write();
     });
   });
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -269,14 +267,11 @@ fs$4.watch(targetDir, () => {
   mainWindow?.webContents.send("file-count-changed", fileCount);
 });
 usb.on("attach", (device) => {
-  console.log("attached:");
   if (device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID && device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID) {
-    console.log("Scanner attached:");
     mainWindow?.webContents.send("usb-change-device", true);
   }
 });
 usb.on("detach", (device) => {
-  console.log("detach:");
   if (device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID && device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID) {
     mainWindow?.webContents.send("usb-change-device", false);
   }

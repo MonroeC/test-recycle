@@ -27,12 +27,12 @@ const moveFiles = (sourceDir, targetDir, callBack, db) => {
             .push({
               isUpload: 0,
               filePath: targetFile,
-              parentPath: `${targetDir}/${uuidTemp}`,
+              parentPath: groupFolder,
+              // parentPath: `${targetDir}/${uuidTemp}`,
               isDelete: false
             })
             .write()
           fs.renameSync(sourceFile, targetFile)
-          console.log('remove')
         }
       }
     }

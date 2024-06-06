@@ -2,7 +2,6 @@ import fs from 'fs'
 import axios from 'axios'
 import FormData from 'form-data'
 import os from 'os'
-import si from 'systeminformation'
 import usb from 'usb'
 import { join } from 'path'
 import pino from 'pino'
@@ -42,11 +41,9 @@ const checkScannerStatus = (cb) => {
   )
 
   if (scannerConnected) {
-    console.log('Scanner is connected.')
     // 可以进一步将状态发送到渲染器
     cb && cb(true)
   } else {
-    console.log('Scanner is not connected.')
     // mainWindow?.webContents.send('usb-change-device', false)
     cb && cb(false)
   }
@@ -69,15 +66,20 @@ const checkRestFiles = (cb, db) => {
           .get('recycleInfos')
           .filter({ isUpload: 0, isDelete: false })
           .value()?.length
+ 
         if (isNotUplaod) {
-          if (getFiles(`${targetDir}/${one}`)?.length) {
-            cb && cb(`${targetDir}/${one}`)
+          const pathname = join(targetDir, one)
+          if (getFiles(pathname)?.length) {
+            cb && cb(pathname)
           }
+          // if (getFiles(`${targetDir}/${one}`)?.length) {
+          //   cb && cb(`${targetDir}/${one}`)
+          // }
+          
         }
       })
-      console.log(folders)
     })
-  } catch (error) {}
+  } catch (error) { }
 }
 
 const savePicture = async (arg, db) => {
@@ -87,7 +89,7 @@ const savePicture = async (arg, db) => {
     files?.forEach((one) => {
       data.append('files', fs.createReadStream(one))
     })
-    const systemInfo = await si.system()
+    const systemInfo = db.get('systemInfo').value()
 
     data.append('deviceSn', systemInfo?.uuid)
     /** 保存文件成功后将数据写入本地数据库 */
@@ -102,55 +104,55 @@ const savePicture = async (arg, db) => {
       },
       data: data
     }
-    files?.forEach((one) => {
-      db.get('recycleInfos')
-        .filter({ filePath: one })
-        .each((one) => {
-          one.isUpload = 1
-          one.uploadingTime = moment().format('YYYY-MM-DD HH:mm:ss')
-        })
-        .write()
-    })
+      files?.forEach((one) => {
+        db.get('recycleInfos')
+          .filter({ filePath: one })
+          .each((one) => {
+            one.isUpload = 1
+            one.uploadingTime = moment().format('YYYY-MM-DD HH:mm:ss')
+          })
+          .write()
+      })
     axios
       .request(config)
       .then((response) => {
-        logger.info(JSON.stringify(response.data))
-        if (response?.data?.success) {
-          /** 更改数据库数据 */
-          db.get('recycleInfos')
-            .filter({ parentPath: arg })
-            .each((one) => {
-              one.isUpload = 2
-              one.uploadedTime = moment().format('YYYY-MM-DD HH:mm:ss')
-              one.isDelete = true
-            })
-            .write()
-          /** 删除文件 */
-          removeFileDir(arg)
+        if (response && response.data && response.data.success) {
+            /** 更改数据库数据 */
+            db.get('recycleInfos')
+              .filter({ parentPath: arg })
+              .each((one) => {
+                one.isUpload = 2
+                one.uploadedTime = moment().format('YYYY-MM-DD HH:mm:ss')
+                one.isDelete = true
+              })
+              .write()
+            /** 删除文件 */
+            removeFileDir(arg)
         } else {
+            db.get('recycleInfos')
+              .filter({ parentPath: arg })
+              .each((one) => {
+                one.isUpload = 0
+                one.isDelete = false
+                one.arg = arg
+                one.status = 'error'
+              })
+              .write()
+        }
+      })
+      .catch(() => {
           db.get('recycleInfos')
             .filter({ parentPath: arg })
             .each((one) => {
               one.isUpload = 0
-              one.isDelete = false
+              one.status = 'catch'
             })
             .write()
-        }
       })
-      .catch((error) => {
-        logger.info(error)
-        db.get('recycleInfos')
-          .filter({ parentPath: arg })
-          .each((one) => {
-            one.isUpload = 0
-          })
-          .write()
-      })
-  } catch (error) {}
+  } catch (error) { }
 }
 
 const saveLocalPicture = (_arg, _db, event) => {
-  console.log(_arg, '_arg')
   try {
     // const files = getFiles(arg)
     // const infos: any = []

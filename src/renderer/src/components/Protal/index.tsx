@@ -54,7 +54,6 @@ const Portal = () => {
     <>
       <Header networkStatus={networkStatus} epsonConnect={epsonConnect} isAuto={isAuto} />
       <Content
-        networkStatus={networkStatus}
         epsonConnect={epsonConnect}
         filePath={filePath}
         isAuto={isAuto}
