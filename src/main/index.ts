@@ -3,7 +3,6 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
 import os from 'os'
-import si from 'systeminformation'
 import icon from '../../resources/icon.png?asset'
 import usb from 'usb'
 import low from 'lowdb'
@@ -18,6 +17,7 @@ import {
   checkRestFiles
 } from '../utils/common'
 import getFileCount from '../utils/getFileCount'
+import biosFun from '../utils/systemInfo'
 
 const logger = pino()
 const log = require('electron-log')
@@ -84,10 +84,16 @@ function createWindow(): void {
     /**
      * 获取系统信息
      */
-    si.system().then((data) => {
-      mainWindow?.webContents.send('system-info', data)
-      console.log(data, 'data')
-      db.update('systemInfo', () => data).write()
+    // si.system().then((data) => {
+    //   mainWindow?.webContents.send('system-info', data)
+    //   console.log(data, 'data')
+    //   db.update('systemInfo', () => data).write()
+    // })
+
+    biosFun().then(res => {
+      console.log(res, 'res')
+      mainWindow?.webContents.send('system-info', res)
+      db.update('systemInfo', () => res).write()
     })
   })
 

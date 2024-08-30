@@ -4,7 +4,6 @@ const path$3 = require("path");
 const utils = require("@electron-toolkit/utils");
 const fs$4 = require("fs");
 const os = require("os");
-const si = require("systeminformation");
 const usb = require("usb");
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
@@ -205,6 +204,27 @@ const getFileCount = function(dir) {
   traverse(dir);
   return res?.length;
 };
+const wmic = require("node-wmic");
+const crypto = require("crypto");
+const biosFun = async () => {
+  let [bios_item] = await wmic.BIOS();
+  console.log("BIOS.SerialNumber=" + bios_item.SerialNumber);
+  let [cpus_item] = await wmic.CPU();
+  console.log("CPU.ProcessorId=" + cpus_item.ProcessorId);
+  let disks_item = await wmic.DiskDrive();
+  let disksString = "";
+  disks_item.forEach((element, index) => {
+    disksString = disksString + (index == 0 ? "" : "@") + element.SerialNumber;
+  });
+  console.log("DiskDrive[0].SerialNumber=" + disks_item[0].SerialNumber);
+  let [csproduct_item] = await wmic.CSProduct();
+  console.log("CSProduct.UUID=" + csproduct_item.UUID);
+  const License = bios_item.SerialNumber.replace(/\s*/g, "") + cpus_item.ProcessorId.replace(/\s*/g, "") + disksString.replace(/\s*/g, "") + csproduct_item.UUID.replace(/\s*/g, "");
+  const hash = crypto.createHash("md5").update(License).digest("hex");
+  return {
+    uuid: hash
+  };
+};
 const logger = pino();
 const log = require("electron-log");
 const homeDirectory = os.homedir();
@@ -241,10 +261,10 @@ function createWindow() {
     const fileCount = getFileCount(targetDir);
     mainWindow?.webContents.send("file-count-changed", fileCount);
     mainWindow?.webContents.send("recycle-pictures-filePath", filePath);
-    si.system().then((data) => {
-      mainWindow?.webContents.send("system-info", data);
-      console.log(data, "data");
-      db.update("systemInfo", () => data).write();
+    biosFun().then((res) => {
+      console.log(res, "res");
+      mainWindow?.webContents.send("system-info", res);
+      db.update("systemInfo", () => res).write();
     });
   });
   mainWindow.webContents.setWindowOpenHandler((details) => {
