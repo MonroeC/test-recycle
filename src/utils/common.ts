@@ -93,12 +93,11 @@ const savePicture = async (arg, db) => {
 
     data.append('deviceSn', systemInfo?.uuid)
     /** 保存文件成功后将数据写入本地数据库 */
-
     const config = {
       method: 'post',
       maxBodyLength: Infinity,
       url: 'https://weighmaster.pinming.cn/material-client-management/api/common/terminalRecycle',
-      // url: 'http://172.16.15.168:8080/api/common/terminalRecycle',
+      // url: 'https://zz-test05.pinming.org/material-client-management/api/common/terminalRecycle',
       headers: {
         'content-type': 'multipart/form-data'
       },
@@ -149,7 +148,8 @@ const savePicture = async (arg, db) => {
             })
             .write()
       })
-  } catch (error) { }
+  } catch (error) {
+   }
 }
 
 const saveLocalPicture = (_arg, _db, event) => {
