@@ -3,14 +3,14 @@
   overflow: auto;
 }
 .content {
-  padding-top: 100px;
+  padding-top: 5vw;
   /* background: #00d6ff4d; */
   height: calc(100vh - 60px);
   .img-content {
     padding: 0 30px;
   }
   .tips {
-    font-size: 44px;
+    font-size: 34px;
     font-weight: 700;
     text-align: center;
   }

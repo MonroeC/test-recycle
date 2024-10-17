@@ -1,8 +1,9 @@
 import { Button, Space } from 'antd'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import scanOpen from '../../../../utils/scanOpen'
 import scan from '../../../../utils/scan'
 import ScanResultLoading from './ScanResultLoading'
+import {getDb} from '../../../../utils/dbFun'
 import './index.css'
 
 const AutoConfirmRecycle = ({
@@ -19,11 +20,25 @@ const AutoConfirmRecycle = ({
   const [loading, setLoading] = useState(false)
   const [autoErrCode, setAutoErrCode] = useState()
   const [flag, setFlag] = useState(false)
+  const [direction, setDirection] = useState<any>('row')
+
+  useEffect(() => {
+    window.electron.ipcRenderer.on('change-picture-direction-response', (_event, data) => {
+      setDirection(data)
+    })
+  }, [])
+  useEffect(()=> {
+    getDb('pictureDirection').then(res => {
+      setDirection(res)
+    })
+  }, [])
+
 
   const saveSuccessCallback = () => {
     window.errorCount = 0
     setScanResultLoading(true)
     setFlag(false)
+    console.log(filePath, 'filePath')
     window.electronApi.saveLocalPicture(filePath)
   }
 
@@ -53,7 +68,8 @@ const AutoConfirmRecycle = ({
       saveSuccessCallback,
       scanErrorCallback,
       scanAllSuccessCallback,
-      saveOneSuccessCallback
+      saveOneSuccessCallback,
+      isDocRotate: direction === 'col'
     })
   }
 

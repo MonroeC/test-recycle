@@ -10,7 +10,6 @@ import getFiles from '../utils/getFiles'
 import moment from 'moment'
 
 const SCANNER_VENDOR_ID = 1208
-const SCANNER_PRODUCT_ID = 359
 
 const logger = pino()
 // 获取用户目录
@@ -36,8 +35,7 @@ const checkScannerStatus = (cb) => {
   const devices = usb.getDeviceList()
   const scannerConnected = devices.some(
     (device) =>
-      device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
-      device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
+      device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID 
   )
 
   if (scannerConnected) {

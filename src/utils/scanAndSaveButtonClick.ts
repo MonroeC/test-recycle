@@ -15,7 +15,7 @@ const ERR_MAP = {
   80020003: '无法打开扫描仪驱动程序',
   80030001: '扫描操作失败'
 }
-function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
+function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb, isDocRotate) {
   // const time = new Date().getTime()
   const current_count = 1
   const current_fileFormat = ESLFunctions?.FF_JPEG
@@ -38,7 +38,7 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
   /** 文档大小 */
   scanParams.docSize = ESLFunctions.DS_AUTO
   /** 旋转方向 */
-  scanParams.docRotate = ESLFunctions.DR_NONE
+  scanParams.docRotate = isDocRotate ? ESLFunctions.DR_R90 : ESLFunctions.DR_NONE
   /** 亮度 */
   scanParams.brightness = 0
   /** 对比度 -1000 - 1000*/

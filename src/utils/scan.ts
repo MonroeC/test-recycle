@@ -11,7 +11,7 @@ function scan(params) {
   /** 文档大小 */
   scanParams.docSize = ESLFunctions.DS_AUTO
   /** 旋转方向 */
-  scanParams.docRotate = ESLFunctions.DR_NONE
+  scanParams.docRotate =  params.isDocRotate ? ESLFunctions.DR_R90 : ESLFunctions.DR_NONE
   /** 亮度 */
   scanParams.brightness = 0
   /** 对比度 -1000 - 1000*/

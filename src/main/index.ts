@@ -36,11 +36,10 @@ createDir(targetDir)
 /** 初始化数据库 */
 const adapter = new FileSync(`${homeDirectory}/db.json`) // 指定数据文件
 const db = low(adapter)
-db.defaults({ recycleInfos: [], isAuto: false, systemInfo: {} }).write()
+db.defaults({ recycleInfos: [], isAuto: false, systemInfo: {}, pictureDirection: 'row' }).write()
 // db.unset('systemInfo').write()
 
 const SCANNER_VENDOR_ID = 1208
-const SCANNER_PRODUCT_ID = 359
 const INTERVAL_TIME = 5000
 
 let mainWindow
@@ -132,8 +131,7 @@ fs.watch(targetDir, () => {
  */
 usb.on('attach', (device) => {
   if (
-    device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
-    device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
+    device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID 
   ) {
     mainWindow?.webContents.send('usb-change-device', true)
   }
@@ -141,8 +139,7 @@ usb.on('attach', (device) => {
 
 usb.on('detach', (device) => {
   if (
-    device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
-    device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
+    device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID 
   ) {
     mainWindow?.webContents.send('usb-change-device', false)
   }
@@ -161,6 +158,12 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+   /** 获取本地数据 */
+   ipcMain.handle('get-db', async (_event, key) => {
+    return db.get(key).value()
+  })
+
 
   // IPC test
   ipcMain.on('ping', () => logger.info('pong'))
@@ -187,6 +190,14 @@ app.whenReady().then(() => {
     event.reply('change-auto-response', arg)
   })
 
+  /** 
+   * 监听图片配置
+   */
+  ipcMain.on('change-picture-direction', (event, arg) => {
+    db.update('pictureDirection', () => arg).write()
+    event.reply('change-picture-direction-response', arg)
+  })
+
   ipcMain.on('local-picture-save', (event, arg) => {
     // saveLocalPicture(arg, db, event)
     moveFiles(
@@ -197,6 +208,10 @@ app.whenReady().then(() => {
       },
       db
     )
+  })
+
+  ipcMain.on('exit-app', () => {
+    app.quit()
   })
 
   createWindow()
