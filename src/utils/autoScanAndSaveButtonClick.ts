@@ -24,6 +24,7 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
    */
   const connectionParam: any = {}
   /** 扫描仪名称 */
+  //connectionParam.deviceName = 'DS-535'
   connectionParam.deviceName = 'DS-535II'
   /** 连接类型 */
   connectionParam.connectType = 1
