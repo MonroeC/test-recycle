@@ -5,10 +5,14 @@ const getFileCount = function (dir) {
   function traverse(dir) {
     fs.readdirSync(dir).forEach((file) => {
       const pathname = path.join(dir, file)
-      if (fs.statSync(pathname).isDirectory()) {
-        traverse(pathname)
-      } else {
-        res.push(pathname)
+      try {
+        if (fs.statSync(pathname).isDirectory()) {
+          traverse(pathname)
+        } else {
+          res.push(pathname)
+        }
+      } catch (error) {
+        console.log(error, 999)
       }
     })
   }

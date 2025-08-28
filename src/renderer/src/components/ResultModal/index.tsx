@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Modal, Result } from 'antd'
+import { Flex, Modal, Result } from 'antd'
 import { useCountDown } from 'ahooks'
 
 interface IProps {
@@ -13,7 +13,7 @@ const ResultModal = (props: IProps) => {
   const [targetDate, setTargetDate] = useState<number>()
 
   useEffect(() => {
-    if (visible && status === 'success') {
+    if (visible && ['success', 'error', 'scanError']?.includes(status)) {
       setTargetDate(Date.now() + 3000)
     }
   }, [visible, status])
@@ -42,11 +42,17 @@ const ResultModal = (props: IProps) => {
     },
     error: {
       title: '回收失败',
-      subTitle: '请联系项目人员检查设备是否异常？或扫描仪是否卡纸或污损？'
+      subTitle: <Flex vertical={true} justify='center' align='center'>
+        <div>请联系项目人员检查设备是否异常？或扫描仪是否卡纸或污损？</div>
+        <div>倒计时{Math.round(countdown / 1000)}s后关闭</div>
+      </Flex> 
     },
     scanError: {
       title: '扫描失败',
-      subTitle: subTitle
+      subTitle:  <Flex vertical={true} justify='center' align='center'>
+      <div>{subTitle}</div>
+      <div>倒计时{Math.round(countdown / 1000)}s后关闭</div>
+    </Flex>  
     }
   }
 

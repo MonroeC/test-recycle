@@ -1,18 +1,23 @@
+#root {
+  background-color: #00d6ff4d;
+  overflow: auto;
+}
 .content {
-  padding-top: calc(50vh - 295px);
-  background: #00d6ff4d;
+  padding-top: 5vw;
+  /* background: #00d6ff4d; */
   height: calc(100vh - 60px);
   .img-content {
     padding: 0 30px;
   }
   .tips {
-    font-size: 44px;
+    font-size: 34px;
     font-weight: 700;
     text-align: center;
   }
   .tips-img {
     display: inline-block;
-    width: 200px;
+    width: calc(28vw - 16px);
+    height: calc(18.67vw)
   }
   .icon {
     font-size: 38px;

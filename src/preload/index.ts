@@ -14,7 +14,9 @@ if (process.contextIsolated) {
       createPicturesDir: (dir) => ipcRenderer.send('create-pictures-dir', dir),
       pictureSave: (dir) => ipcRenderer.send('picture-save', dir),
       changeAuto: (isAuto) => ipcRenderer.send('change-auto', isAuto),
-      saveLocalPicture: (dir) => ipcRenderer.send('local-picture-save', dir)
+      changePictureDirection: (direction) => ipcRenderer.send('change-picture-direction', direction),
+      saveLocalPicture: (dir) => ipcRenderer.send('local-picture-save', dir),
+      getDb: (key) => ipcRenderer.invoke('get-db', key),
     })
   } catch (error) {
     console.error(error)

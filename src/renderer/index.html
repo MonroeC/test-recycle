@@ -285,12 +285,13 @@
 
       ESLClass.prototype.Scan = function (params, callback) {
         var protypeThis = this
-
+        if (params.isAuto && !window.isAutoScanning) return
         var requestXML = new XMLHttpRequest()
         requestXML.onreadystatechange = function () {
           if (requestXML.readyState === 4) {
             if (requestXML.status == 200) {
               var checkScanStatus = function () {
+                // if (params.isAuto && !window.isAutoScanning) return
                 protypeThis.GetScanAndSaveEvent(function (isSuccess, result) {
                   if (isSuccess) {
                     if (result.eventType == ESLFunctions.EVENT_NONE) {

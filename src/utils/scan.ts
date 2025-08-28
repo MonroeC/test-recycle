@@ -11,7 +11,7 @@ function scan(params) {
   /** 文档大小 */
   scanParams.docSize = ESLFunctions.DS_AUTO
   /** 旋转方向 */
-  scanParams.docRotate = ESLFunctions.DR_NONE
+  scanParams.docRotate =  params.isDocRotate ? ESLFunctions.DR_R90 : ESLFunctions.DR_NONE
   /** 亮度 */
   scanParams.brightness = 0
   /** 对比度 -1000 - 1000*/
@@ -29,18 +29,36 @@ function scan(params) {
   /** 选择双馈选项 */
   scanParams.optDoubleFeedDetect = ESLFunctions.DFD_NONE
   /** 空白页跳过  BPS_NONE 不跳过*/
-  scanParams.optBlankPageSkip = ESLFunctions.BPS_VERY_LOW
+  scanParams.optBlankPageSkip = ESLFunctions.BPS_NONE
+  /** 自动连续送纸 */
+  // scanParams.autoFeedingMode = ESLFunctions.AFM_ON
   /** 偏斜矫正 SC_EDGE 通过边缘矫正 */
   scanParams.skewCorrect = ESLFunctions.SC_EDGE
-  window.eslObj.Scan(scanParams, function (isSuccess, result) {
+  scanParams.isAuto = true
+  window?.eslObj?.Scan(scanParams, function (isSuccess, result) {
     if (isSuccess) {
       if (result.eventType == ESLFunctions.EVENT_SCANPAGE_COMPLETE) {
+        console.log(result, 'sigele')
       }
       if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
-        console.log(params, 888)
-        save(params)
+        console.log(result, 'all')
+        if (!window.isAutoScanning) {
+          console.log('stop')
+        } else {
+          params.scanAllSuccessCallback()
+        }
       }
     } else {
+      params.scanErrorCallback(result.errorCode)
+    }
+    console.log(!window.isAutoScanning, window.scanOpen, 777)
+    if (!window.isAutoScanning && window.scanOpen) {
+      // window.eslObj.Close((isSuccess) => {
+      //   if (isSuccess) {
+      //     window.scanOpen = false
+      //   }
+      // })
+      save(params)
     }
   })
 }

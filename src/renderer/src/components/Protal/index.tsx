@@ -2,6 +2,7 @@ import Header from '../Header'
 import Content from '../Content'
 import { useState, useEffect } from 'react'
 import useFilePath from '@renderer/hooks/useFilePath'
+import scanClose from '../../../../utils/close'
 const Portal = () => {
   /**
    * 网络链接状态
@@ -15,7 +16,6 @@ const Portal = () => {
   /**
    * 图片存储文件夹目录
    */
-  // const [filePath, setFilePath] = useState()
   const { filePath } = useFilePath()
 
   const [isAuto, setIsAuto] = useState(false)
@@ -36,21 +36,28 @@ const Portal = () => {
   window.addEventListener('offline', alertOnlineStatus)
 
   useEffect(() => {
+    window.isAuto = isAuto
+    window.electronApi.changeAuto(isAuto)
+
+    if (!isAuto) {
+      return
+    }
+    window.errorCount = 0
+  }, [isAuto])
+  useEffect(() => {
     return () => {
       // 卸 载的时候关闭扫描进程
-      // const eslObj = ESLFunctions.ESLCreate()
-      // eslObj.Close(() => {}, 'http://localhost:51000')
+      scanClose(() => {})
     }
   }, [])
-
   return (
     <>
       <Header networkStatus={networkStatus} epsonConnect={epsonConnect} isAuto={isAuto} />
       <Content
-        networkStatus={networkStatus}
         epsonConnect={epsonConnect}
         filePath={filePath}
         isAuto={isAuto}
+        setIsAuto={setIsAuto}
       />
     </>
   )

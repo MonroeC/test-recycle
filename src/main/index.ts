@@ -3,38 +3,44 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
 import os from 'os'
-import si from 'systeminformation'
 import icon from '../../resources/icon.png?asset'
 import usb from 'usb'
 import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import pino from 'pino'
+import moveFiles from '../utils/moveFiles'
 import {
   createDir,
-  // savePicture,
+  savePicture,
   saveLocalPicture,
-  checkScannerStatus
-  // checkRestFiles
+  checkScannerStatus,
+  checkRestFiles
 } from '../utils/common'
 import getFileCount from '../utils/getFileCount'
+import biosFun from '../utils/systemInfo'
 
 const logger = pino()
 const log = require('electron-log')
 // 获取用户目录
 const homeDirectory = os.homedir()
 /** 需要监听的文件路径 */
-const filePath = `${homeDirectory}/recyclePictures` // 文件路径
+// const filePath = `${homeDirectory}/recyclePictures` // 文件路径
+
+// 设置源文件夹和目标文件夹路径
+const filePath = join(homeDirectory, 'recycle-pictures-A')
+const targetDir = join(homeDirectory, 'recycle-pictures-B')
+
 /** 创建照片存储文件夹： 根目录下的recyclePictures */
 createDir(filePath)
+createDir(targetDir)
 /** 初始化数据库 */
 const adapter = new FileSync(`${homeDirectory}/db.json`) // 指定数据文件
 const db = low(adapter)
-db.defaults({ recycleInfos: [], isAuto: false }).write()
-// db.get('recycleInfos').remove().write()
+db.defaults({ recycleInfos: [], isAuto: false, systemInfo: {}, pictureDirection: 'row' }).write()
+// db.unset('systemInfo').write()
 
 const SCANNER_VENDOR_ID = 1208
-const SCANNER_PRODUCT_ID = 359
-const INTERVAL_TIME = 10000
+const INTERVAL_TIME = 5000
 
 let mainWindow
 
@@ -53,16 +59,17 @@ function createWindow(): void {
     fullscreen: true
   })
   /** 打开开发者工具 */
-  mainWindow.webContents.openDevTools()
+  // mainWindow.webContents.openDevTools()
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
     checkScannerStatus((value) => {
       mainWindow?.webContents.send('usb-change-device', value)
     })
+
     checkInterval()
     // 将文件个数发送给渲染进程
-    const fileCount = getFileCount(filePath)
+    const fileCount = getFileCount(targetDir)
     mainWindow?.webContents.send('file-count-changed', fileCount)
     /**
      * 将文件路径发送给渲染进程
@@ -71,13 +78,21 @@ function createWindow(): void {
     /**
      * 是否自动回收
      */
-    mainWindow?.webContents.send('change-auto-response', db.get('isAuto').value())
+    // mainWindow?.webContents.send('change-auto-response', db.get('isAuto').value())
 
     /**
      * 获取系统信息
      */
-    si.system().then((data) => {
-      mainWindow?.webContents.send('system-info', data)
+    // si.system().then((data) => {
+    //   mainWindow?.webContents.send('system-info', data)
+    //   console.log(data, 'data')
+    //   db.update('systemInfo', () => data).write()
+    // })
+
+    biosFun().then(res => {
+      console.log(res, 'res')
+      mainWindow?.webContents.send('system-info', res)
+      db.update('systemInfo', () => res).write()
     })
   })
 
@@ -97,17 +112,16 @@ function createWindow(): void {
 
 const checkInterval = () => {
   setInterval(() => {
-    // TODO
-    // checkRestFiles((value) => savePicture(value, db, null), db)
+    checkRestFiles((value) => savePicture(value, db), db)
   }, INTERVAL_TIME)
 }
 
 /**
  * 监听未上传文件个数
  */
-fs.watch(filePath, () => {
+fs.watch(targetDir, () => {
   // 获取文件个数
-  const fileCount = getFileCount(filePath)
+  const fileCount = getFileCount(targetDir)
   // 将文件个数发送给渲染进程
   mainWindow?.webContents.send('file-count-changed', fileCount)
 })
@@ -116,21 +130,16 @@ fs.watch(filePath, () => {
  * 监听usbs设备插拔
  */
 usb.on('attach', (device) => {
-  console.log('attached:')
   if (
-    device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
-    device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
+    device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID 
   ) {
-    console.log('Scanner attached:')
     mainWindow?.webContents.send('usb-change-device', true)
   }
 })
 
 usb.on('detach', (device) => {
-  console.log('detach:')
   if (
-    device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID &&
-    device.deviceDescriptor.idProduct === SCANNER_PRODUCT_ID
+    device.deviceDescriptor.idVendor === SCANNER_VENDOR_ID 
   ) {
     mainWindow?.webContents.send('usb-change-device', false)
   }
@@ -149,6 +158,12 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+   /** 获取本地数据 */
+   ipcMain.handle('get-db', async (_event, key) => {
+    return db.get(key).value()
+  })
+
 
   // IPC test
   ipcMain.on('ping', () => logger.info('pong'))
@@ -175,9 +190,28 @@ app.whenReady().then(() => {
     event.reply('change-auto-response', arg)
   })
 
+  /** 
+   * 监听图片配置
+   */
+  ipcMain.on('change-picture-direction', (event, arg) => {
+    db.update('pictureDirection', () => arg).write()
+    event.reply('change-picture-direction-response', arg)
+  })
+
   ipcMain.on('local-picture-save', (event, arg) => {
-    // savePicture(arg, db, event)
-    saveLocalPicture(arg, db, event)
+    // saveLocalPicture(arg, db, event)
+    moveFiles(
+      filePath,
+      targetDir,
+      () => {
+        saveLocalPicture(arg, db, event)
+      },
+      db
+    )
+  })
+
+  ipcMain.on('exit-app', () => {
+    app.quit()
   })
 
   createWindow()

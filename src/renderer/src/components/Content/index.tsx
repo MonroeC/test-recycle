@@ -1,60 +1,37 @@
-import { Button, Flex, message } from 'antd'
+import { Flex, Space, message } from 'antd'
+import { useEffect, useRef, useState } from 'react'
 import { CloseCircleFilled, CheckCircleFilled } from '@ant-design/icons'
 import ConfirmRecycle from '../ConfirmReccycle'
+import AutoConfirmRecycle from '../AutoConfirmRecycle'
 import ResultModal from '../ResultModal'
-import scanAndSaveButtonClick from '../../../../utils/scanAndSaveButtonClick'
+import close from '../../../../utils/close'
+import pic1 from '../../../../../resources/images/pic1.png'
+import pic2 from '../../../../../resources/images/pic2.png'
+import pic3 from '../../../../../resources/images/pic3.png'
+
+
 import './index.css'
-import { useEffect, useRef, useState } from 'react'
 
 const Content = ({
-  networkStatus,
   epsonConnect,
   filePath,
-  isAuto
+  isAuto,
+  setIsAuto
 }: {
-  /**
-   * 当前网络状态
-   */
-  networkStatus: string
   epsonConnect: boolean
   filePath: string
   /**
    * 自动回收状态
    */
   isAuto
+  setIsAuto
 }) => {
   const [saveVisible, setSaveVisible] = useState(false)
   const [status, setStatus] = useState('')
   const confirmRef = useRef<any>(null)
+  const [scanResultLoading, setScanResultLoading] = useState(false)
 
-  const autoFun = () => {
-    scanAndSaveButtonClick(
-      // @ts-ignore
-      ESLFunctions,
-      filePath,
-      (errCode, msg) => {
-        // @ts-ignore
-        if (window.isAuto) {
-          console.log(errCode, msg)
-          if (errCode !== 40008002) {
-            message.error(msg ?? '扫描仪启动失败')
-          }
-        }
-      },
-      () => {
-        if ((window as any).isAuto) {
-          autoFun()
-        }
-      }
-    )
-  }
-  useEffect(() => {
-    // ts-ignore
-    ;(window as any).isAuto = isAuto
-    if (isAuto && epsonConnect) {
-      autoFun()
-    }
-  }, [isAuto, epsonConnect])
+  const closeSuccessCallback = () => {}
 
   useEffect(() => {
     window.electron.ipcRenderer.on('picture-save-response', (_event, arg) => {
@@ -71,42 +48,83 @@ const Content = ({
             setStatus('error')
           }
         }
+      } else {
+        close({
+          closeSuccessCallback
+        })
       }
     })
   }, [])
 
+  const AUTO_TEXT_MAP = {
+    first: '先将单据整理整齐、整洁、摆正，分批投入回收口',
+    second: '点击“开始扫描”，扫描完毕后，点击“扫描完成”'
+  }
+
+  const TEXT_MAP = {
+    first: '将单据分为单张、整洁、摆正投入回收口',
+    second: '再点击“确认回收”'
+  }
+  const finallyTextMap = isAuto ? AUTO_TEXT_MAP : TEXT_MAP
   return (
     <Flex vertical className="content">
       <Flex justify="center" align="center" vertical gap={50}>
-        <Flex vertical gap={20}>
-          <div className="tips">1、将单据分为单张、整洁、摆正投入回收口</div>
+        <Flex vertical gap={20} style={{ width: '90%' }}>
+          <div className="tips">1、{finallyTextMap.first}</div>
           <Flex className="img-content" justify="space-between">
-            <Flex vertical gap={12} style={{ width: 304 }} justify="center" align="center">
-              <img alt="" className="tips-img" src="https://placehold.co/600x400" />
+            <Flex
+              vertical
+              gap={12}
+              style={{ width: 'calc(30%vw)' }}
+              justify="center"
+              align="center"
+            >
+              <img alt="" className="tips-img" src={pic1} />
               <div>单据歪斜、折边、黏连</div>
               <CloseCircleFilled className="icon color-red" />
             </Flex>
-            <Flex vertical gap={12} style={{ width: 304 }} justify="center" align="center">
-              <img alt="" className="tips-img" src="https://placehold.co/600x400" />
+            <Flex
+              vertical
+              gap={12}
+              style={{ width: 'calc(30%vw)' }}
+              justify="center"
+              align="center"
+            >
+              <img alt="" className="tips-img" src={pic2} />
               <div>别针、图钉、露胶等</div>
               <CloseCircleFilled className="icon color-red" />
             </Flex>
-            <Flex vertical gap={12} style={{ width: 304 }} justify="center" align="center">
-              <img alt="" className="tips-img" src="https://placehold.co/600x400" />
+            <Flex
+              vertical
+              gap={12}
+              style={{ width: 'calc(30%vw)' }}
+              justify="center"
+              align="center"
+            >
+              <img alt="" className="tips-img" src={pic3} />
               <div>单据规正，无折边，无黏连、无硬物、黏胶</div>
               <CheckCircleFilled className="icon color-green" />
             </Flex>
           </Flex>
         </Flex>
         <Flex vertical gap={20} align="center">
-          <div className="tips">2、再点击确认回收</div>
-          {networkStatus === 'offline' || !epsonConnect || isAuto ? (
-            <Button className="confirm-btn-disabled" disabled>
-              确认回收
-            </Button>
-          ) : (
-            <ConfirmRecycle ref={confirmRef} filePath={filePath} />
-          )}
+          <div className="tips">2、{finallyTextMap.second}</div>
+          <Space>
+            {isAuto ? (
+              <AutoConfirmRecycle
+                setIsAuto={setIsAuto}
+                filePath={filePath}
+                setScanResultLoading={setScanResultLoading}
+                scanResultLoading={scanResultLoading}
+              />
+            ) : (
+              <ConfirmRecycle
+                epsonConnect={epsonConnect}
+                ref={confirmRef}
+                filePath={filePath}
+              />
+            )}
+          </Space>
         </Flex>
       </Flex>
       <ResultModal

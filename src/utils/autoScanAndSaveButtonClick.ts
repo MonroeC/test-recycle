@@ -15,8 +15,8 @@ const ERR_MAP = {
   80020003: '无法打开扫描仪驱动程序',
   80030001: '扫描操作失败'
 }
-function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb, isDocRotate) {
-  // const time = new Date().getTime()
+
+function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb) {
   const current_count = 1
   const current_fileFormat = ESLFunctions?.FF_JPEG
   /**
@@ -24,7 +24,7 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb, isDocRot
    */
   const connectionParam: any = {}
   /** 扫描仪名称 */
-  // connectionParam.deviceName = 'DS-535'
+  //connectionParam.deviceName = 'DS-535'
   connectionParam.deviceName = 'DS-535II'
   /** 连接类型 */
   connectionParam.connectType = 1
@@ -39,7 +39,7 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb, isDocRot
   /** 文档大小 */
   scanParams.docSize = ESLFunctions.DS_AUTO
   /** 旋转方向 */
-  scanParams.docRotate = isDocRotate ? ESLFunctions.DR_R90 : ESLFunctions.DR_NONE
+  scanParams.docRotate = ESLFunctions.DR_NONE
   /** 亮度 */
   scanParams.brightness = 0
   /** 对比度 -1000 - 1000*/
@@ -59,7 +59,7 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb, isDocRot
   /** 空白页跳过  BPS_NONE 不跳过*/
   scanParams.optBlankPageSkip = ESLFunctions.BPS_NONE
   /** 自动送纸：AFM_ON  AFM_NONE */
-  // scanParams.autoFeedingMode = ESLFunctions.AFM_ON
+  scanParams.autoFeedingMode = ESLFunctions.AFM_ON
   /** 偏斜矫正 SC_EDGE 通过边缘矫正 */
   scanParams.skewCorrect = ESLFunctions.SC_EDGE
 
@@ -84,11 +84,14 @@ function scanAndSaveButtonClick(ESLFunctions, filePath, errcb, closecb, isDocRot
           console.log('扫描仪一页')
         }
         if (result.eventType == ESLFunctions.EVENT_ALLSCAN_COMPLETE) {
+          console.log('扫描仪全部')
         }
         if (result.eventType == ESLFunctions.EVENT_SAVEPAGE_COMPLETE) {
+          console.log('保存一页')
         }
         if (result.eventType == ESLFunctions.EVENT_ALLSAVE_COMPLETE) {
-          window.electronApi.saveLocalPicture(saveParam.filePath)
+          console.log('保存全部')
+          // window.electronApi.saveLocalPicture(saveParam.filePath)
         }
       } else {
         errcb && errcb(result?.errorCode?.toString(16), ERR_MAP[result?.errorCode?.toString(16)])

@@ -1,10 +1,13 @@
-export default ({ closeCallBack }) => {
-  window?.eslObj?.Close(function (isSuccess, result) {
+export default (params) => {
+  const { closeSuccessCallback, closeErrorCallback } = params
+  if (!window.scanOpen) return
+  window?.eslObj?.Close(function (isSuccess) {
     if (isSuccess == true) {
-      // callBack(true, saveResult)
-      closeCallBack && closeCallBack()
+      console.log('关闭成功')
+      window.scanOpen = false
+      closeSuccessCallback && closeSuccessCallback()
     } else {
-      // callBack(false, result)
+      closeErrorCallback && closeErrorCallback()
     }
   })
 }

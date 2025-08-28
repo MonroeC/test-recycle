@@ -13,4 +13,20 @@
     font-weight: 600;
     font-size: 18px;
   }
+  .pic-image-row {
+    display: inline-block;
+    width: 110px;
+    height: 50px;
+  }
+  .pic-image-col {
+    display: inline-block;
+    height: 110px;
+    width: 50px;
+  }
+  .ml-36 {
+    margin-left: 36px;
+  }
+  .ml-56 {
+    margin-left: 56px;
+  }
 }
